@@ -146,107 +146,95 @@ const pageTitle = computed(() => {
         ></div>
 
         <aside
-            class="fixed inset-y-0 left-0 z-30 flex flex-col shadow-2xl transition-all duration-300 ease-in-out print:hidden"
+            class="fixed inset-y-0 left-0 z-30 flex flex-col bg-white border-r border-slate-200 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-all duration-300 ease-in-out print:hidden"
             :class="[
                 sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 lg:w-0 lg:translate-x-0 lg:overflow-hidden'
             ]"
-            style="background: linear-gradient(160deg, #052e16 0%, #064e3b 60%, #065f46 100%);"
         >
-            <!-- ===== LOGO dengan Animasi ===== -->
-            <div class="flex h-20 shrink-0 items-center justify-center border-b border-white/10 px-5">
-                <div class="flex items-center gap-3">
-                    <!-- Logo Icon animasi pulse + rotate on hover -->
-                    <div class="logo-container relative flex h-11 w-11 shrink-0 items-center justify-center">
-                        <!-- Outer ring animasi -->
-                        <div class="absolute inset-0 rounded-2xl bg-white/10 ring-2 ring-white/20 logo-ring"></div>
-                        <!-- Inner -->
-                        <div class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg logo-icon">
-                            <svg class="h-5 w-5 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
+            <!-- ===== LOGO ===== -->
+            <div class="flex h-20 shrink-0 items-center justify-start border-b border-slate-100 px-6">
+                <Link href="/" class="flex items-center gap-3 transition-transform hover:scale-105">
+                    <!-- Logo Icon -->
+                    <div class="logo-container relative flex h-10 w-10 shrink-0 items-center justify-center">
+                        <div class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 shadow-sm logo-icon">
+                            <svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                             </svg>
                         </div>
                     </div>
-                    <div>
-                        <p class="text-lg font-black leading-tight tracking-wide text-white">SIDA</p>
-                        <p class="text-[9px] font-bold uppercase tracking-[0.3em] text-emerald-300">Dompas</p>
+                    <div class="flex flex-col">
+                        <span class="text-xl font-extrabold tracking-tight text-slate-800">SIDA</span>
+                        <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-600">Dompas</span>
                     </div>
-                </div>
+                </Link>
             </div>
 
-            <!-- ===== Navigation dengan Cards ===== -->
-            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-2" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent;">
-                <div v-for="group in menus" :key="group.label" class="menu-card overflow-hidden rounded-2xl ring-1 ring-white/10" style="background: rgba(255,255,255,0.05);">
-                    <!-- Card Header -->
-                    <div class="flex items-center gap-2 px-3.5 py-2.5 border-b border-white/10"
-                        :style="`background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)`">
-                        <div class="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
-                        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/80">
+            <!-- ===== Navigation ===== -->
+            <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-8" style="scrollbar-width: none;">
+                <div v-for="group in menus" :key="group.label" class="space-y-2">
+                    <!-- Group Label -->
+                    <div class="px-3">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                             {{ group.label }}
                         </p>
                     </div>
                     <!-- Menu Items -->
-                    <div class="px-2 py-2 space-y-0.5">
+                    <div class="space-y-1">
                         <Link
                             v-for="item in group.items"
                             :key="item.href"
                             :href="item.href"
                             @click="closeSidebarMobile"
-                            class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200"
+                            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200"
                             :class="isActive(item.href)
-                                ? 'bg-white/20 text-white shadow-sm'
-                                : 'text-emerald-100/80 hover:bg-white/10 hover:text-white'"
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
                         >
-                            <!-- Active bar -->
-                            <div v-if="isActive(item.href)" class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-emerald-300"></div>
-
                             <!-- Icon -->
-                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-                                :class="isActive(item.href) ? 'bg-white/15' : 'bg-white/5'">
-                                <svg v-if="item.icon === 'home'" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex shrink-0 items-center justify-center transition-colors"
+                                :class="isActive(item.href) ? 'text-emerald-600' : 'text-slate-400 group-hover:text-emerald-500'">
+                                <svg v-if="item.icon === 'home'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                                 </svg>
-                                <svg v-else-if="item.icon === 'check-circle'" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg v-else-if="item.icon === 'check-circle'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <svg v-else-if="item.icon === 'users'" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg v-else-if="item.icon === 'users'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                <svg v-else-if="item.icon === 'chart-bar'" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg v-else-if="item.icon === 'chart-bar'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                 </svg>
-                                <svg v-else class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                             </div>
 
-                            <span class="truncate text-[13px]">{{ item.title }}</span>
-
-                            <!-- Active dot -->
-                            <div v-if="isActive(item.href)" class="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-300"></div>
+                            <span class="truncate">{{ item.title }}</span>
                         </Link>
                     </div>
                 </div>
             </nav>
 
             <!-- ===== User Footer ===== -->
-            <div class="shrink-0 border-t border-white/10 p-3">
-                <div class="flex items-center gap-3 rounded-2xl p-2.5" style="background: rgba(255,255,255,0.08);">
+            <div class="shrink-0 border-t border-slate-100 p-4">
+                <div class="flex items-center gap-3 rounded-2xl bg-slate-50 p-2.5 border border-slate-100/50">
                     <!-- Avatar -->
-                    <div class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-sm font-bold text-white shadow">
+                    <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-sm font-bold text-emerald-700">
                         {{ userInitial }}
                         <!-- Online dot -->
-                        <span class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 ring-1 ring-emerald-900" style="background:#4ade80; border-color:#052e16;"></span>
+                        <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>
                     </div>
                     <div class="min-w-0 flex-1">
                         <Link href="/settings/profile" class="block transition hover:opacity-80">
-                            <p class="truncate text-[13px] font-semibold text-white">{{ user?.name }}</p>
+                            <p class="truncate text-sm font-semibold text-slate-800">{{ user?.name }}</p>
                         </Link>
-                        <p class="text-[10px] font-medium text-emerald-300">{{ roleLabel }}</p>
+                        <p class="text-[11px] font-medium text-slate-500">{{ roleLabel }}</p>
                     </div>
                     <Link
                         href="/settings/profile"
                         title="Pengaturan"
-                        class="shrink-0 rounded-lg p-1.5 text-emerald-300 transition hover:bg-emerald-500/25 hover:text-emerald-100"
+                        class="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -256,7 +244,7 @@ const pageTitle = computed(() => {
                     <button
                         @click="logout"
                         title="Keluar"
-                        class="shrink-0 rounded-lg p-1.5 text-emerald-300 transition hover:bg-red-500/25 hover:text-red-300"
+                        class="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
