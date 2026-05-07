@@ -9,68 +9,52 @@ defineProps<{
 </script>
 
 <template>
-    <div class="flex min-h-svh bg-slate-50 font-sans">
-        <!-- Left Panel - Branding (hidden on mobile) -->
-        <div class="relative hidden w-1/2 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-900 p-12 text-white md:flex">
-            <!-- Decorative background elements -->
-            <div class="absolute -left-[10%] -top-[20%] h-[500px] w-[500px] rounded-full bg-emerald-500/20 blur-3xl"></div>
-            <div class="absolute -bottom-[20%] -right-[10%] h-[500px] w-[500px] rounded-full bg-emerald-900/40 blur-3xl"></div>
-            
-            <div class="relative z-10 max-w-md text-center">
-                <!-- Logo Icon -->
-                <div class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md">
-                    <svg class="h-12 w-12 fill-white" viewBox="0 0 24 24">
-                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                    </svg>
-                </div>
-                <h1 class="mb-4 text-5xl font-extrabold tracking-tight text-white drop-shadow-md">SIDA Dompas</h1>
-                <p class="mb-4 text-2xl font-semibold text-emerald-100">Sistem Informasi Dasawisma</p>
-                <p class="text-base leading-relaxed text-emerald-50/80">
-                    Platform digital terpadu untuk pengelolaan data warga, administrasi dasawisma, dan pelaporan kepala desa di Desa Dompas.
-                </p>
-
-                <div class="mt-14 grid grid-cols-3 gap-6 text-center">
-                    <div class="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm transition-transform hover:-translate-y-1">
-                        <div class="mb-1 text-3xl font-bold">3</div>
-                        <div class="text-sm font-medium text-emerald-100">Peran Pengguna</div>
-                    </div>
-                    <div class="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm transition-transform hover:-translate-y-1">
-                        <div class="mb-1 text-3xl font-bold">📋</div>
-                        <div class="text-sm font-medium text-emerald-100">Verifikasi Data</div>
-                    </div>
-                    <div class="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm transition-transform hover:-translate-y-1">
-                        <div class="mb-1 text-3xl font-bold">📊</div>
-                        <div class="text-sm font-medium text-emerald-100">Laporan Warga</div>
-                    </div>
-                </div>
+    <div
+        class="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 p-4 font-sans sm:p-8">
+        <!-- Premium Ambient Background -->
+        <div class="pointer-events-none absolute inset-0 overflow-hidden">
+            <div class="absolute -top-[20%] -right-[10%] h-[70vw] w-[70vw] max-w-[800px] animate-pulse rounded-full bg-emerald-400/20 blur-[100px]"
+                style="animation-duration: 8s;"></div>
+            <div class="absolute -bottom-[20%] -left-[10%] h-[60vw] w-[60vw] max-w-[600px] animate-pulse rounded-full bg-teal-500/20 blur-[100px]"
+                style="animation-duration: 10s; animation-delay: 2s;"></div>
+            <div
+                class="absolute left-1/2 top-1/2 h-[50vw] w-[50vw] max-w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-200/30 blur-[80px]">
             </div>
         </div>
 
-        <!-- Right Panel - Login Form -->
-        <div class="flex w-full flex-col items-center justify-center bg-white p-6 md:w-1/2">
-            <div class="w-full max-w-md rounded-3xl bg-white p-8 transition-all sm:border sm:border-slate-100 sm:shadow-xl">
-                <!-- Mobile Logo -->
-                <div class="mb-8 flex flex-col items-center md:hidden">
-                    <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 shadow-lg">
-                        <svg class="h-8 w-8 fill-white" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <!-- Glassmorphism Card -->
+        <div
+            class="relative z-10 w-full max-w-[460px] overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/70 p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] backdrop-blur-2xl sm:p-10 transition-all duration-300 hover:shadow-[0_16px_60px_-15px_rgba(0,0,0,0.15)]">
+
+            <!-- Branding Header -->
+            <div class="mb-8 flex flex-col items-center text-center">
+                <div
+                    class="group relative mb-5 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-700 shadow-xl shadow-emerald-500/30 transition-transform duration-500 hover:scale-105">
+                    <div
+                        class="absolute inset-0 rounded-[1.5rem] bg-white/20 opacity-0 mix-blend-overlay transition-opacity duration-500 group-hover:opacity-100">
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-800">SIDA Dompas</h2>
+                    <svg class="h-10 w-10 fill-white drop-shadow-md" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
                 </div>
-
-                <!-- Title -->
-                <div class="mb-8 text-center md:text-left">
-                    <h2 class="text-3xl font-extrabold text-slate-800">{{ title }}</h2>
-                    <p class="mt-2 text-sm text-slate-500">{{ description }}</p>
-                </div>
-
-                <div class="mt-6">
-                    <slot />
-                </div>
-
-                <p class="mt-10 text-center text-sm font-medium text-slate-400">
-                    &copy; 2026 SIDA Dompas &mdash; Desa Dompas
+                <h1
+                    class="bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent">
+                    SIDA Dompas
+                </h1>
+                <p class="mt-1.5 text-[0.8rem] font-bold tracking-[0.15em] text-emerald-600/90 uppercase">
+                    Sistem Informasi Dasawisma
                 </p>
             </div>
+
+
+            <!-- Form Content -->
+            <div class="mt-8">
+                <slot />
+            </div>
+
+            <p class="mt-10 text-center text-xs font-medium text-slate-400">
+                &copy; {{ new Date().getFullYear() }} SIDA Dompas &mdash; Desa Dompas
+            </p>
         </div>
     </div>
 </template>
