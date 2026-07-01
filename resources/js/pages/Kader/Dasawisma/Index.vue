@@ -6,10 +6,11 @@ import SidaModal from '@/components/SidaModal.vue';
 import SidaConfirm from '@/components/SidaConfirm.vue';
 import SidaAlert from '@/components/SidaAlert.vue';
 
-const props = defineProps<{ dasawismas: any[] }>();
+const props = defineProps<{ dasawismas: any[], kaders?: any[] }>();
 
 const page = usePage();
 const flash = computed(() => (page.props as any).flash);
+const role = computed(() => (page.props as any).auth?.user?.role ?? '');
 const showAlert = ref(true);
 watch(() => flash.value, () => { showAlert.value = true; });
 
@@ -37,7 +38,7 @@ function doDelete() { router.delete(`/kader/dasawisma/${confirmId.value}`, { pre
 
 // Create Modal
 const showCreate = ref(false);
-const createForm = useForm({ nama_dasawisma: '', rt: '', rw: '', desa: 'Dompas', kecamatan: '', kabupaten: '' });
+const createForm = useForm({ kader_id: '', nama_dasawisma: '', rt: '', rw: '', desa: 'Dompas', kecamatan: '', kabupaten: '' });
 function submitCreate() {
     createForm.post('/kader/dasawisma', { onSuccess: () => { showCreate.value = false; createForm.reset(); }, preserveScroll: true });
 }
@@ -45,9 +46,10 @@ function submitCreate() {
 // Edit Modal
 const showEdit = ref(false);
 const editId = ref<number | null>(null);
-const editForm = useForm({ nama_dasawisma: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '' });
+const editForm = useForm({ kader_id: '', nama_dasawisma: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '' });
 function openEdit(ds: any) {
     editId.value = ds.id;
+    editForm.kader_id = ds.kader_id || '';
     editForm.nama_dasawisma = ds.nama_dasawisma;
     editForm.rt = ds.rt;
     editForm.rw = ds.rw;
@@ -122,6 +124,13 @@ function submitEdit() {
         <!-- Modal Create -->
         <SidaModal :show="showCreate" title="Tambah Dasawisma" @close="showCreate = false">
             <form @submit.prevent="submitCreate" class="space-y-4">
+                <div v-if="role === 'admin'">
+                    <label class="mb-1 block text-xs font-medium text-gray-700">Kader</label>
+                    <select v-model="createForm.kader_id" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100">
+                        <option value="">Pilih Kader</option>
+                        <option v-for="k in kaders" :key="k.id" :value="k.id">{{ k.user?.name }}</option>
+                    </select>
+                </div>
                 <div>
                     <label class="mb-1 block text-xs font-medium text-gray-700">Nama Dasawisma</label>
                     <input v-model="createForm.nama_dasawisma" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100" />
@@ -157,6 +166,13 @@ function submitEdit() {
         <!-- Modal Edit -->
         <SidaModal :show="showEdit" title="Edit Dasawisma" @close="showEdit = false">
             <form @submit.prevent="submitEdit" class="space-y-4">
+                <div v-if="role === 'admin'">
+                    <label class="mb-1 block text-xs font-medium text-gray-700">Kader</label>
+                    <select v-model="editForm.kader_id" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100">
+                        <option value="">Pilih Kader</option>
+                        <option v-for="k in kaders" :key="k.id" :value="k.id">{{ k.user?.name }}</option>
+                    </select>
+                </div>
                 <div>
                     <label class="mb-1 block text-xs font-medium text-gray-700">Nama Dasawisma</label>
                     <input v-model="editForm.nama_dasawisma" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100" />

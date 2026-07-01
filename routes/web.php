@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kader\DasawismaController;
 use App\Http\Controllers\Kader\KeluargaController;
@@ -44,9 +43,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Laporan
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('laporan/download-pdf', [LaporanController::class, 'downloadPdf'])->name('laporan.download-pdf');
 
-    // AI Assistant
-    Route::post('ai-assistant', [AiAssistantController::class, 'chat'])->name('ai.chat');
 });
 
 // Kader routes
@@ -75,20 +73,22 @@ Route::middleware(['auth', 'verified', 'kader'])->prefix('kader')->name('kader.'
 
     // Anggota Keluarga
     Route::post('keluarga/{keluarga}/anggota', [AnggotaKeluargaController::class, 'store'])->name('anggota.store');
+    Route::get('anggota/{anggotaKeluarga}/edit', [AnggotaKeluargaController::class, 'edit'])->name('anggota.edit');
     Route::put('anggota/{anggotaKeluarga}', [AnggotaKeluargaController::class, 'update'])->name('anggota.update');
     Route::delete('anggota/{anggotaKeluarga}', [AnggotaKeluargaController::class, 'destroy'])->name('anggota.destroy');
 
-    // AI Assistant
-    Route::post('ai-assistant', [AiAssistantController::class, 'chat'])->name('ai.chat');
+    // Laporan
+    Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('laporan/download-pdf', [LaporanController::class, 'downloadPdf'])->name('laporan.download-pdf');
+
 });
 
 // Kades routes
 Route::middleware(['auth', 'verified', 'kades'])->prefix('kades')->name('kades.')->group(function () {
     Route::get('dashboard', [KadesDashboardController::class, 'index'])->name('dashboard');
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('laporan/download-pdf', [LaporanController::class, 'downloadPdf'])->name('laporan.download-pdf');
     
-    // AI Assistant
-    Route::post('ai-assistant', [AiAssistantController::class, 'chat'])->name('ai.chat');
 });
 
 require __DIR__.'/settings.php';

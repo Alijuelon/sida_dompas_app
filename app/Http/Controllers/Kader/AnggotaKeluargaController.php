@@ -14,7 +14,20 @@ class AnggotaKeluargaController extends Controller
     {
         $this->authorizeKader($keluarga);
 
-        $keluarga->anggotaKeluargas()->create($request->validated());
+        $data = $request->validated();
+        $data['desa_kelurahan'] = $data['desa_kelurahan'] ?? 'Dompas';
+        $data['kecamatan']      = $data['kecamatan'] ?? 'Bukit Batu';
+        $data['kabupaten_kota'] = $data['kabupaten_kota'] ?? 'Bengkalis';
+        $data['provinsi']       = $data['provinsi'] ?? 'Riau';
+        $data['akseptor_kb']               = $data['akseptor_kb'] ?? false;
+        $data['aktif_posyandu']            = $data['aktif_posyandu'] ?? false;
+        $data['ikut_bina_keluarga_balita'] = $data['ikut_bina_keluarga_balita'] ?? false;
+        $data['memiliki_tabungan']         = $data['memiliki_tabungan'] ?? false;
+        $data['ikut_kelompok_belajar']     = $data['ikut_kelompok_belajar'] ?? false;
+        $data['ikut_paud_sejenis']         = $data['ikut_paud_sejenis'] ?? false;
+        $data['ikut_koperasi']             = $data['ikut_koperasi'] ?? false;
+
+        $keluarga->anggotaKeluargas()->create($data);
 
         // Sinkronisasi jumlah_anggota dari count aktual
         $keluarga->update([
@@ -25,11 +38,31 @@ class AnggotaKeluargaController extends Controller
             ->with('success', 'Anggota keluarga berhasil ditambahkan.');
     }
 
+    public function edit(AnggotaKeluarga $anggotaKeluarga)
+    {
+        $this->authorizeKader($anggotaKeluarga->keluarga);
+        
+        return view('kader.anggota.edit', compact('anggotaKeluarga'));
+    }
+
     public function update(AnggotaKeluargaRequest $request, AnggotaKeluarga $anggotaKeluarga): RedirectResponse
     {
         $this->authorizeKader($anggotaKeluarga->keluarga);
 
-        $anggotaKeluarga->update($request->validated());
+        $data = $request->validated();
+        $data['desa_kelurahan'] = $data['desa_kelurahan'] ?? 'Dompas';
+        $data['kecamatan']      = $data['kecamatan'] ?? 'Bukit Batu';
+        $data['kabupaten_kota'] = $data['kabupaten_kota'] ?? 'Bengkalis';
+        $data['provinsi']       = $data['provinsi'] ?? 'Riau';
+        $data['akseptor_kb']               = $data['akseptor_kb'] ?? false;
+        $data['aktif_posyandu']            = $data['aktif_posyandu'] ?? false;
+        $data['ikut_bina_keluarga_balita'] = $data['ikut_bina_keluarga_balita'] ?? false;
+        $data['memiliki_tabungan']         = $data['memiliki_tabungan'] ?? false;
+        $data['ikut_kelompok_belajar']     = $data['ikut_kelompok_belajar'] ?? false;
+        $data['ikut_paud_sejenis']         = $data['ikut_paud_sejenis'] ?? false;
+        $data['ikut_koperasi']             = $data['ikut_koperasi'] ?? false;
+
+        $anggotaKeluarga->update($data);
 
         return redirect()->route('kader.keluarga.show', $anggotaKeluarga->keluarga_id)
             ->with('success', 'Data anggota berhasil diperbarui.');
@@ -53,6 +86,10 @@ class AnggotaKeluargaController extends Controller
 
     private function authorizeKader(Keluarga $keluarga): void
     {
+        if (auth()->user()->isAdmin()) {
+            return;
+        }
+
         $kader        = auth()->user()->kader;
         $dasawismaIds = $kader ? $kader->dasawismas()->pluck('id')->toArray() : [];
 

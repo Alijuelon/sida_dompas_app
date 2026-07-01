@@ -38,6 +38,31 @@ const editAnggotaForm = useForm({
     pekerjaan: '',
     status_dalam_keluarga: '',
     status_perkawinan: '',
+    dasa_wisma: '',
+    nama_kepala_rumah_tangga: '',
+    jabatan: '',
+    tempat_lahir: '',
+    umur: '',
+    alamat_jalan: '',
+    rt: '',
+    rw: '',
+    desa_kelurahan: '',
+    kecamatan: '',
+    kabupaten_kota: '',
+    provinsi: '',
+    pendidikan_terakhir: '',
+    pekerjaan_utama: '',
+    akseptor_kb: '0',
+    jenis_akseptor_kb: '',
+    aktif_posyandu: '0',
+    frekuensi_posyandu: '',
+    ikut_bina_keluarga_balita: '0',
+    memiliki_tabungan: '0',
+    ikut_kelompok_belajar: '0',
+    jenis_paket_belajar: '',
+    ikut_paud_sejenis: '0',
+    ikut_koperasi: '0',
+    jenis_koperasi: '',
 });
 
 function openEditAnggota(ak: any) {
@@ -51,6 +76,32 @@ function openEditAnggota(ak: any) {
     editAnggotaForm.pekerjaan = ak.pekerjaan ?? '';
     editAnggotaForm.status_dalam_keluarga = ak.status_dalam_keluarga ?? '';
     editAnggotaForm.status_perkawinan = ak.status_perkawinan ?? '';
+    editAnggotaForm.dasa_wisma = ak.dasa_wisma ?? '';
+    editAnggotaForm.nama_kepala_rumah_tangga = ak.nama_kepala_rumah_tangga ?? '';
+    editAnggotaForm.jabatan = ak.jabatan ?? '';
+    editAnggotaForm.tempat_lahir = ak.tempat_lahir ?? '';
+    editAnggotaForm.umur = ak.umur ?? '';
+    editAnggotaForm.alamat_jalan = ak.alamat_jalan ?? '';
+    editAnggotaForm.rt = ak.rt ?? '';
+    editAnggotaForm.rw = ak.rw ?? '';
+    editAnggotaForm.desa_kelurahan = ak.desa_kelurahan ?? '';
+    editAnggotaForm.kecamatan = ak.kecamatan ?? '';
+    editAnggotaForm.kabupaten_kota = ak.kabupaten_kota ?? '';
+    editAnggotaForm.provinsi = ak.provinsi ?? '';
+    editAnggotaForm.pendidikan_terakhir = ak.pendidikan_terakhir ?? '';
+    editAnggotaForm.pekerjaan_utama = ak.pekerjaan_utama ?? '';
+    editAnggotaForm.akseptor_kb = ak.akseptor_kb ? '1' : '0';
+    editAnggotaForm.jenis_akseptor_kb = ak.jenis_akseptor_kb ?? '';
+    editAnggotaForm.aktif_posyandu = ak.aktif_posyandu ? '1' : '0';
+    editAnggotaForm.frekuensi_posyandu = ak.frekuensi_posyandu ?? '';
+    editAnggotaForm.ikut_bina_keluarga_balita = ak.ikut_bina_keluarga_balita ? '1' : '0';
+    editAnggotaForm.memiliki_tabungan = ak.memiliki_tabungan ? '1' : '0';
+    editAnggotaForm.ikut_kelompok_belajar = ak.ikut_kelompok_belajar ? '1' : '0';
+    editAnggotaForm.jenis_paket_belajar = ak.jenis_paket_belajar ?? '';
+    editAnggotaForm.ikut_paud_sejenis = ak.ikut_paud_sejenis ? '1' : '0';
+    editAnggotaForm.ikut_koperasi = ak.ikut_koperasi ? '1' : '0';
+    editAnggotaForm.jenis_koperasi = ak.jenis_koperasi ?? '';
+    
     showEditAnggota.value = true;
 }
 function submitEditAnggota() {
@@ -72,6 +123,31 @@ const tambahForm = useForm({
     pekerjaan: '',
     status_dalam_keluarga: '',
     status_perkawinan: '',
+    dasa_wisma: '',
+    nama_kepala_rumah_tangga: '',
+    jabatan: '',
+    tempat_lahir: '',
+    umur: '',
+    alamat_jalan: '',
+    rt: '',
+    rw: '',
+    desa_kelurahan: '',
+    kecamatan: '',
+    kabupaten_kota: '',
+    provinsi: '',
+    pendidikan_terakhir: '',
+    pekerjaan_utama: '',
+    akseptor_kb: '0',
+    jenis_akseptor_kb: '',
+    aktif_posyandu: '0',
+    frekuensi_posyandu: '',
+    ikut_bina_keluarga_balita: '0',
+    memiliki_tabungan: '0',
+    ikut_kelompok_belajar: '0',
+    jenis_paket_belajar: '',
+    ikut_paud_sejenis: '0',
+    ikut_koperasi: '0',
+    jenis_koperasi: '',
 });
 function submitTambahAnggota() {
     tambahForm.post(`/kader/keluarga/${props.keluarga.id}/anggota`, {
@@ -229,10 +305,10 @@ function formatDate(d: string) {
                                 <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.pekerjaan ?? '-' }}</td>
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <button @click="openEditAnggota(ak)"
+                                        <a :href="`/kader/anggota/${ak.id}/edit`"
                                             class="rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 transition hover:bg-amber-100">
                                             Edit
-                                        </button>
+                                        </a>
                                         <button @click="openDeleteAnggota(ak.id, ak.nama_anggota)"
                                             class="rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-100">
                                             Hapus

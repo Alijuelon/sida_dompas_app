@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import GlobalAlert from '@/components/GlobalAlert.vue';
 
 const page = usePage();
 const user = computed(() => (page.props as any).auth?.user);
@@ -14,6 +15,23 @@ const adminMenus = [
         color: 'from-blue-500 to-blue-600',
         items: [
             { title: 'Dashboard', href: '/admin/dashboard', icon: 'home' },
+        ]
+    },
+    {
+        label: 'Pendataan',
+        icon: 'data-group',
+        color: 'from-emerald-500 to-teal-600',
+        items: [
+            { title: 'Data Dasawisma', href: '/kader/dasawisma', icon: 'office' },
+            { title: 'Data KK & Anggota', href: '/kader/keluarga', icon: 'users' },
+        ]
+    },
+    {
+        label: 'Pemantauan',
+        icon: 'monitor-group',
+        color: 'from-amber-500 to-orange-500',
+        items: [
+            { title: 'Status Verifikasi', href: '/kader/status-verifikasi', icon: 'check-circle' },
         ]
     },
     {
@@ -59,6 +77,14 @@ const kaderMenus = [
         color: 'from-amber-500 to-orange-500',
         items: [
             { title: 'Status Verifikasi', href: '/kader/status-verifikasi', icon: 'check-circle' },
+        ]
+    },
+    {
+        label: 'Laporan',
+        icon: 'report-group',
+        color: 'from-purple-500 to-violet-600',
+        items: [
+            { title: 'Laporan Populasi', href: '/kader/laporan', icon: 'chart-bar' },
         ]
     },
 ];
@@ -306,6 +332,7 @@ const pageTitle = computed(() => {
                 <slot />
             </main>
         </div>
+        <GlobalAlert />
     </div>
 </template>
 

@@ -31,23 +31,23 @@ defineEmits(['close']);
                 >
                     <div
                         v-if="show"
-                        class="relative w-full rounded-2xl bg-white shadow-2xl"
+                        class="relative w-full rounded-2xl bg-white shadow-2xl flex flex-col max-h-[calc(100vh-2rem)]"
                         :class="maxWidth ?? 'max-w-lg'"
                     >
                         <!-- Header -->
-                        <div v-if="title" class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                        <div v-if="title" class="shrink-0 flex items-center justify-between border-b border-gray-100 px-6 py-4">
                             <h3 class="text-base font-semibold text-gray-800">{{ title }}</h3>
                             <button @click="$emit('close')" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <div v-else class="absolute right-3 top-3">
+                        <div v-else class="absolute right-3 top-3 z-10">
                             <button @click="$emit('close')" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <!-- Body -->
-                        <div class="px-6 py-5">
+                        <div class="px-6 py-5 overflow-y-auto">
                             <slot />
                         </div>
                     </div>

@@ -9,7 +9,7 @@ class AnggotaKeluargaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isKader();
+        return auth()->check() && (auth()->user()->isKader() || auth()->user()->isAdmin());
     }
 
     public function rules(): array
@@ -31,6 +31,31 @@ class AnggotaKeluargaRequest extends FormRequest
             'pekerjaan'             => ['nullable', 'string', 'max:100'],
             'status_dalam_keluarga' => ['nullable', 'string', 'max:50'],
             'status_perkawinan'     => ['nullable', 'string', 'max:50'],
+            'dasa_wisma'            => ['nullable', 'string', 'max:255'],
+            'nama_kepala_rumah_tangga' => ['nullable', 'string', 'max:255'],
+            'jabatan'               => ['nullable', 'string', 'max:255'],
+            'tempat_lahir'          => ['nullable', 'string', 'max:255'],
+            'umur'                  => ['nullable', 'integer', 'min:0'],
+            'alamat_jalan'          => ['nullable', 'string', 'max:255'],
+            'rt'                    => ['nullable', 'string', 'max:10'],
+            'rw'                    => ['nullable', 'string', 'max:10'],
+            'desa_kelurahan'        => ['nullable', 'string', 'max:255'],
+            'kecamatan'             => ['nullable', 'string', 'max:255'],
+            'kabupaten_kota'        => ['nullable', 'string', 'max:255'],
+            'provinsi'              => ['nullable', 'string', 'max:255'],
+            'pendidikan_terakhir'   => ['nullable', 'string', 'max:255'],
+            'pekerjaan_utama'       => ['nullable', 'string', 'max:255'],
+            'akseptor_kb'           => ['nullable', 'boolean'],
+            'jenis_akseptor_kb'     => ['nullable', 'string', 'max:255'],
+            'aktif_posyandu'        => ['nullable', 'boolean'],
+            'frekuensi_posyandu'    => ['nullable', 'string', 'max:255'],
+            'ikut_bina_keluarga_balita' => ['nullable', 'boolean'],
+            'memiliki_tabungan'     => ['nullable', 'boolean'],
+            'ikut_kelompok_belajar' => ['nullable', 'boolean'],
+            'jenis_paket_belajar'   => ['nullable', 'string', 'max:255'],
+            'ikut_paud_sejenis'     => ['nullable', 'boolean'],
+            'ikut_koperasi'         => ['nullable', 'boolean'],
+            'jenis_koperasi'        => ['nullable', 'string', 'max:255'],
         ];
     }
 

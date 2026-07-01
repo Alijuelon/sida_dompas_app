@@ -18,13 +18,21 @@ class DasawismaController extends Controller
 
     public function index(): Response
     {
-        $kader = $this->getKader();
-        $dasawismas = $kader
-            ? Dasawisma::where('kader_id', $kader->id)->withCount('keluargas')->latest()->get()
-            : collect();
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $dasawismas = Dasawisma::with('kader.user')->withCount('keluargas')->latest()->get();
+            $kaders = \App\Models\Kader::with('user')->get();
+        } else {
+            $kader = $this->getKader();
+            $dasawismas = $kader
+                ? Dasawisma::where('kader_id', $kader->id)->withCount('keluargas')->latest()->get()
+                : collect();
+            $kaders = [];
+        }
 
         return Inertia::render('Kader/Dasawisma/Index', [
             'dasawismas' => $dasawismas,
+            'kaders' => $kaders,
         ]);
     }
 
@@ -35,22 +43,31 @@ class DasawismaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'nama_dasawisma' => 'required|string|max:255',
             'rt' => 'required|string|max:10',
             'rw' => 'required|string|max:10',
             'desa' => 'required|string|max:255',
-        ]);
+        ];
 
-        $kader = $this->getKader();
-
-        if (! $kader) {
-            return redirect()->back()->with('error', 'Data kader tidak ditemukan.');
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $rules['kader_id'] = 'required|exists:kaders,id';
         }
 
-        Dasawisma::create(array_merge($validated, ['kader_id' => $kader->id]));
+        $validated = $request->validate($rules);
 
-        return redirect()->route('kader.dasawisma.index')->with('success', 'Dasawisma berhasil ditambahkan.');
+        if ($user->isAdmin()) {
+            Dasawisma::create($validated);
+        } else {
+            $kader = $this->getKader();
+            if (! $kader) {
+                return redirect()->back()->with('error', 'Data kader tidak ditemukan.');
+            }
+            Dasawisma::create(array_merge($validated, ['kader_id' => $kader->id]));
+        }
+
+        return redirect()->back()->with('success', 'Dasawisma berhasil ditambahkan.');
     }
 
     public function edit(Dasawisma $dasawisma): Response
@@ -66,16 +83,22 @@ class DasawismaController extends Controller
     {
         $this->authorizeKader($dasawisma);
 
-        $validated = $request->validate([
+        $rules = [
             'nama_dasawisma' => 'required|string|max:255',
             'rt' => 'required|string|max:10',
             'rw' => 'required|string|max:10',
             'desa' => 'required|string|max:255',
-        ]);
+        ];
+
+        if (auth()->user()->isAdmin()) {
+            $rules['kader_id'] = 'required|exists:kaders,id';
+        }
+
+        $validated = $request->validate($rules);
 
         $dasawisma->update($validated);
 
-        return redirect()->route('kader.dasawisma.index')->with('success', 'Dasawisma berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Dasawisma berhasil diperbarui.');
     }
 
     public function destroy(Dasawisma $dasawisma): RedirectResponse
@@ -83,11 +106,15 @@ class DasawismaController extends Controller
         $this->authorizeKader($dasawisma);
         $dasawisma->delete();
 
-        return redirect()->route('kader.dasawisma.index')->with('success', 'Dasawisma berhasil dihapus.');
+        return redirect()->back()->with('success', 'Dasawisma berhasil dihapus.');
     }
 
     private function authorizeKader(Dasawisma $dasawisma): void
     {
+        if (auth()->user()->isAdmin()) {
+            return;
+        }
+
         $kader = $this->getKader();
         if (! $kader || $dasawisma->kader_id !== $kader->id) {
             abort(403);

@@ -11,159 +11,228 @@ use App\Models\User;
 use App\Models\Verifikasi;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as Faker;
+use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $faker = Faker::create('id_ID');
+
         // ========================
         // 1. AKUN ADMIN
         // ========================
-        $adminUser = User::create([
-            'name'              => 'Administrator',
-            'username'          => 'admin',
-            'email'             => 'admin@sidadompas.id',
-            'password'          => Hash::make('password'),
-            'role'              => 'admin',
-            'status'            => true,
-            'email_verified_at' => now(),
-        ]);
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@sidadompas.id'],
+            [
+                'name'              => 'Administrator',
+                'username'          => 'admin',
+                'password'          => Hash::make('password'),
+                'role'              => 'admin',
+                'status'            => true,
+                'email_verified_at' => now(),
+            ]
+        );
 
-        Admin::create([
-            'user_id'    => $adminUser->id,
-            'nama_admin' => 'Administrator SIDA',
-        ]);
+        Admin::firstOrCreate(
+            ['user_id' => $adminUser->id],
+            ['nama_admin' => 'Administrator SIDA']
+        );
 
         // ========================
         // 2. AKUN KEPALA DESA
         // ========================
-        User::create([
-            'name'              => 'Bpk. Suryadi',
-            'username'          => 'kades1',
-            'email'             => 'kades@sidadompas.id',
-            'password'          => Hash::make('password'),
-            'role'              => 'kades',
-            'status'            => true,
-            'email_verified_at' => now(),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'kades@sidadompas.id'],
+            [
+                'name'              => 'Bpk. Suryadi',
+                'username'          => 'kades1',
+                'password'          => Hash::make('password'),
+                'role'              => 'kades',
+                'status'            => true,
+                'email_verified_at' => now(),
+            ]
+        );
 
         // ========================
-        // 3. AKUN KADER 1 + DATA
+        // 3. AKUN KADER 1 & 2
         // ========================
-        $kaderUser1 = User::create([
-            'name'              => 'Ibu Siti Aminah',
-            'username'          => 'kader1',
-            'email'             => 'kader1@sidadompas.id',
-            'password'          => Hash::make('password'),
-            'role'              => 'kader',
-            'status'            => true,
-            'email_verified_at' => now(),
-        ]);
-
-        $kader1 = Kader::create([
-            'user_id'    => $kaderUser1->id,
-            'nama_kader' => 'Siti Aminah',
-            'wilayah'    => 'RT 01 / RW 01',
-            'no_hp'      => '081234567890',
-        ]);
-
-        // Dasawisma Kader 1
-        $dasawisma1 = Dasawisma::create([
-            'kader_id'       => $kader1->id,
-            'nama_dasawisma' => 'Dasawisma Melati',
-            'rt'             => '01',
-            'rw'             => '01',
-            'desa'           => 'Desa Dompas',
-        ]);
-
-        // KK 1 - Disetujui
-        $kk1 = Keluarga::create([
-            'dasawisma_id'       => $dasawisma1->id,
-            'no_kk'              => '6208010101000001',
-            'nama_kepala_keluarga' => 'Budi Santoso',
-            'jumlah_anggota'     => 4,
-        ]);
-        $anggotaKK1 = [
-            ['nik' => '6208010101010001', 'nama_anggota' => 'Budi Santoso', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '1980-05-10', 'agama' => 'Islam', 'pendidikan' => 'SMA/SMK', 'pekerjaan' => 'Petani', 'status_dalam_keluarga' => 'Kepala Keluarga', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101010002', 'nama_anggota' => 'Sari Dewi', 'jenis_kelamin' => 'P', 'tanggal_lahir' => '1983-08-22', 'agama' => 'Islam', 'pendidikan' => 'SMP', 'pekerjaan' => 'Ibu Rumah Tangga', 'status_dalam_keluarga' => 'Istri', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101010003', 'nama_anggota' => 'Andi Santoso', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '2005-03-15', 'agama' => 'Islam', 'pendidikan' => 'SMA/SMK', 'pekerjaan' => 'Pelajar/Mahasiswa', 'status_dalam_keluarga' => 'Anak', 'status_perkawinan' => 'Belum Kawin'],
-            ['nik' => '6208010101010004', 'nama_anggota' => 'Putri Santoso', 'jenis_kelamin' => 'P', 'tanggal_lahir' => '2020-11-08', 'agama' => 'Islam', 'pendidikan' => 'Tidak Sekolah', 'pekerjaan' => 'Tidak Bekerja', 'status_dalam_keluarga' => 'Anak', 'status_perkawinan' => 'Belum Kawin'],
+        $kadersData = [
+            [
+                'name' => 'Ibu Siti Aminah',
+                'username' => 'kader1',
+                'email' => 'kader1@sidadompas.id',
+                'wilayah' => 'RT 01 / RW 01',
+                'no_hp' => '081234567890',
+                'rt' => '01'
+            ],
+            [
+                'name' => 'Bpk. Ahmad Fauzi',
+                'username' => 'kader2',
+                'email' => 'kader2@sidadompas.id',
+                'wilayah' => 'RT 02 / RW 01',
+                'no_hp' => '081298765432',
+                'rt' => '02'
+            ]
         ];
-        foreach ($anggotaKK1 as $a) $kk1->anggotaKeluargas()->create($a);
-        Verifikasi::create(['keluarga_id' => $kk1->id, 'admin_id' => 1, 'tanggal_verifikasi' => '2026-03-20', 'status_verifikasi' => 'disetujui', 'catatan' => null]);
 
-        // KK 2 - Menunggu
-        $kk2 = Keluarga::create([
-            'dasawisma_id'         => $dasawisma1->id,
-            'no_kk'                => '6208010101000002',
-            'nama_kepala_keluarga' => 'Hendra Kurniawan',
-            'jumlah_anggota'       => 3,
-        ]);
-        $anggotaKK2 = [
-            ['nik' => '6208010101020001', 'nama_anggota' => 'Hendra Kurniawan', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '1975-12-01', 'agama' => 'Islam', 'pendidikan' => 'S1', 'pekerjaan' => 'PNS', 'status_dalam_keluarga' => 'Kepala Keluarga', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101020002', 'nama_anggota' => 'Ratna Sari', 'jenis_kelamin' => 'P', 'tanggal_lahir' => '1978-06-17', 'agama' => 'Islam', 'pendidikan' => 'S1', 'pekerjaan' => 'Swasta', 'status_dalam_keluarga' => 'Istri', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101020003', 'nama_anggota' => 'Fajar Kurniawan', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '2002-09-24', 'agama' => 'Islam', 'pendidikan' => 'S1', 'pekerjaan' => 'Pelajar/Mahasiswa', 'status_dalam_keluarga' => 'Anak', 'status_perkawinan' => 'Belum Kawin'],
-        ];
-        foreach ($anggotaKK2 as $a) $kk2->anggotaKeluargas()->create($a);
-        Verifikasi::create(['keluarga_id' => $kk2->id, 'status_verifikasi' => 'menunggu']);
+        $kaders = [];
+        foreach ($kadersData as $index => $kd) {
+            $user = User::firstOrCreate(
+                ['email' => $kd['email']],
+                [
+                    'name'              => $kd['name'],
+                    'username'          => $kd['username'],
+                    'password'          => Hash::make('password'),
+                    'role'              => 'kader',
+                    'status'            => true,
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            $kader = Kader::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nama_kader' => $kd['name'],
+                    'wilayah'    => $kd['wilayah'],
+                    'no_hp'      => $kd['no_hp'],
+                ]
+            );
+            $kaders[] = ['model' => $kader, 'rt' => $kd['rt']];
+        }
 
         // ========================
-        // 4. AKUN KADER 2 + DATA
+        // 4. GENERATE DUMMY DATA (Dasawisma, Keluarga, Anggota)
         // ========================
-        $kaderUser2 = User::create([
-            'name'              => 'Bpk. Ahmad Fauzi',
-            'username'          => 'kader2',
-            'email'             => 'kader2@sidadompas.id',
-            'password'          => Hash::make('password'),
-            'role'              => 'kader',
-            'status'            => true,
-            'email_verified_at' => now(),
-        ]);
+        
+        $agamas = ['Islam', 'Kristen Protestan', 'Kristen Katolik', 'Hindu', 'Buddha', 'Konghucu'];
+        $pendidikans = ['Tidak Tamat SD', 'SD/MI', 'SMP', 'SMU/SMK', 'Diploma', 'S1', 'S2', 'S3'];
+        $pekerjaans = ['Petani', 'Nelayan', 'PNS', 'Pegawai Swasta', 'Wiraswasta', 'Ibu Rumah Tangga', 'Pelajar/Mahasiswa', 'Tidak Bekerja'];
+        
+        foreach ($kaders as $kData) {
+            $kader = $kData['model'];
+            $rt = $kData['rt'];
+            
+            // Buat 3 Dasawisma per Kader
+            for ($d = 1; $d <= 3; $d++) {
+                $namaDasawisma = 'Dasawisma ' . $faker->colorName() . ' ' . $d;
+                $dasawisma = Dasawisma::firstOrCreate(
+                    ['nama_dasawisma' => $namaDasawisma, 'kader_id' => $kader->id],
+                    [
+                        'rt'   => $rt,
+                        'rw'   => '01',
+                        'desa' => 'Desa Dompas',
+                    ]
+                );
 
-        $kader2 = Kader::create([
-            'user_id'    => $kaderUser2->id,
-            'nama_kader' => 'Ahmad Fauzi',
-            'wilayah'    => 'RT 02 / RW 01',
-            'no_hp'      => '081298765432',
-        ]);
+                // Buat 10 Keluarga per Dasawisma
+                for ($k = 1; $k <= 10; $k++) {
+                    $kepalaKeluargaName = $faker->name('male');
+                    $noKk = $faker->numerify('140801##########'); // Format Riau, Bengkalis
+                    $jumlahAnggota = $faker->numberBetween(2, 6);
+                    
+                    $keluarga = Keluarga::create([
+                        'dasawisma_id'         => $dasawisma->id,
+                        'no_kk'                => $noKk,
+                        'nama_kepala_keluarga' => $kepalaKeluargaName,
+                        'jumlah_anggota'       => $jumlahAnggota,
+                        'rt'                   => $rt,
+                        'rw'                   => '01',
+                        'dusun_lingkungan'     => $faker->randomElement(['Murni', 'Lestari']),
+                        'desa'                 => 'Dompas',
+                        'kecamatan'            => 'Bukit Batu',
+                        'kabupaten'            => 'Bengkalis',
+                        'provinsi'             => 'Riau',
+                        // Rekap fields dummy
+                        'jumlah_kk'            => 1,
+                        'jumlah_balita'        => $faker->numberBetween(0, 2),
+                        'jumlah_pus'           => 1,
+                        'jumlah_wus'           => 1,
+                        'jumlah_buta'          => 0,
+                        'jumlah_ibu_hamil'     => $faker->numberBetween(0, 1),
+                        'jumlah_ibu_menyusui'  => $faker->numberBetween(0, 1),
+                        'jumlah_lansia'        => $faker->numberBetween(0, 2),
+                    ]);
 
-        $dasawisma2 = Dasawisma::create([
-            'kader_id'       => $kader2->id,
-            'nama_dasawisma' => 'Dasawisma Mawar',
-            'rt'             => '02',
-            'rw'             => '01',
-            'desa'           => 'Desa Dompas',
-        ]);
+                    // Generate status verifikasi acak
+                    $statuses = ['disetujui', 'menunggu', 'ditolak'];
+                    $status = $statuses[array_rand($statuses)];
+                    
+                    Verifikasi::create([
+                        'keluarga_id'        => $keluarga->id,
+                        'admin_id'           => $status != 'menunggu' ? $adminUser->id : null,
+                        'tanggal_verifikasi' => $status != 'menunggu' ? Carbon::now()->subDays(rand(1, 30)) : null,
+                        'status_verifikasi'  => $status,
+                        'catatan'            => $status == 'ditolak' ? 'Terdapat ketidaksesuaian data NIK' : null,
+                    ]);
 
-        // KK 3 - Ditolak
-        $kk3 = Keluarga::create([
-            'dasawisma_id'         => $dasawisma2->id,
-            'no_kk'                => '6208010101000003',
-            'nama_kepala_keluarga' => 'Rudi Hermawan',
-            'jumlah_anggota'       => 2,
-        ]);
-        $anggotaKK3 = [
-            ['nik' => '6208010101030001', 'nama_anggota' => 'Rudi Hermawan', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '1985-04-20', 'agama' => 'Islam', 'pendidikan' => 'SMA/SMK', 'pekerjaan' => 'Nelayan', 'status_dalam_keluarga' => 'Kepala Keluarga', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101030002', 'nama_anggota' => 'Yanti', 'jenis_kelamin' => 'P', 'tanggal_lahir' => '1988-07-11', 'agama' => 'Islam', 'pendidikan' => 'SD', 'pekerjaan' => 'Ibu Rumah Tangga', 'status_dalam_keluarga' => 'Istri', 'status_perkawinan' => 'Kawin'],
-        ];
-        foreach ($anggotaKK3 as $a) $kk3->anggotaKeluargas()->create($a);
-        Verifikasi::create(['keluarga_id' => $kk3->id, 'admin_id' => 1, 'tanggal_verifikasi' => '2026-03-22', 'status_verifikasi' => 'ditolak', 'catatan' => 'NIK tidak sesuai format. Harap periksa kembali data NIK anggota.']);
+                    // Generate Anggota Keluarga
+                    for ($a = 1; $a <= $jumlahAnggota; $a++) {
+                        $isKK = ($a === 1);
+                        $gender = $isKK ? 'L' : ($a === 2 ? 'P' : $faker->randomElement(['L', 'P']));
+                        $nama = $isKK ? $kepalaKeluargaName : $faker->name($gender == 'L' ? 'male' : 'female');
+                        $tglLahir = $isKK ? $faker->dateTimeBetween('-60 years', '-25 years') : ($a === 2 ? $faker->dateTimeBetween('-55 years', '-20 years') : $faker->dateTimeBetween('-20 years', '-1 years'));
+                        
+                        $statusDlmKeluarga = $isKK ? 'Kepala Rumah Tangga' : ($a === 2 ? 'Istri' : 'Anak');
+                        $statusKawin = ($isKK || $a === 2) ? 'Menikah' : 'Lajang';
+                        
+                        $akseptorKb = $gender == 'P' && $a == 2 ? $faker->boolean(60) : false;
+                        $aktifPosyandu = $gender == 'P' && $a == 2 ? $faker->boolean(70) : false;
+                        $ikutBelajar = $faker->boolean(20);
+                        $ikutKoperasi = ($isKK || $a === 2) ? $faker->boolean(40) : false;
 
-        // KK 4 - Disetujui
-        $kk4 = Keluarga::create([
-            'dasawisma_id'         => $dasawisma2->id,
-            'no_kk'                => '6208010101000004',
-            'nama_kepala_keluarga' => 'Suparman',
-            'jumlah_anggota'       => 5,
-        ]);
-        $anggotaKK4 = [
-            ['nik' => '6208010101040001', 'nama_anggota' => 'Suparman', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '1960-01-15', 'agama' => 'Islam', 'pendidikan' => 'SD', 'pekerjaan' => 'Petani', 'status_dalam_keluarga' => 'Kepala Keluarga', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101040002', 'nama_anggota' => 'Wagini', 'jenis_kelamin' => 'P', 'tanggal_lahir' => '1963-09-30', 'agama' => 'Islam', 'pendidikan' => 'SD', 'pekerjaan' => 'Ibu Rumah Tangga', 'status_dalam_keluarga' => 'Istri', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101040003', 'nama_anggota' => 'Bambang Suparman', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '1990-03-08', 'agama' => 'Islam', 'pendidikan' => 'SMA/SMK', 'pekerjaan' => 'Swasta', 'status_dalam_keluarga' => 'Anak', 'status_perkawinan' => 'Kawin'],
-            ['nik' => '6208010101040004', 'nama_anggota' => 'Rina Suparman', 'jenis_kelamin' => 'P', 'tanggal_lahir' => '1993-11-25', 'agama' => 'Islam', 'pendidikan' => 'SMA/SMK', 'pekerjaan' => 'Tidak Bekerja', 'status_dalam_keluarga' => 'Anak', 'status_perkawinan' => 'Belum Kawin'],
-            ['nik' => '6208010101040005', 'nama_anggota' => 'Bagas Pratama', 'jenis_kelamin' => 'L', 'tanggal_lahir' => '2021-06-12', 'agama' => 'Islam', 'pendidikan' => 'Tidak Sekolah', 'pekerjaan' => 'Tidak Bekerja', 'status_dalam_keluarga' => 'Cucu', 'status_perkawinan' => 'Belum Kawin'],
-        ];
-        foreach ($anggotaKK4 as $a) $kk4->anggotaKeluargas()->create($a);
-        Verifikasi::create(['keluarga_id' => $kk4->id, 'admin_id' => 1, 'tanggal_verifikasi' => '2026-03-23', 'status_verifikasi' => 'disetujui']);
+                        AnggotaKeluarga::create([
+                            'keluarga_id'              => $keluarga->id,
+                            'no_reg'                   => $faker->numerify('REG-####-####'),
+                            'nik'                      => $faker->numerify('140801##########'),
+                            'nama_anggota'             => $nama,
+                            'jenis_kelamin'            => $gender,
+                            'tanggal_lahir'            => $tglLahir,
+                            'tempat_lahir'             => $faker->city(),
+                            'umur'                     => Carbon::parse($tglLahir)->age,
+                            'agama'                    => 'Islam', // Mayoritas dummy
+                            'status_dalam_keluarga'    => $statusDlmKeluarga,
+                            'status_perkawinan'        => $statusKawin,
+                            'pendidikan_terakhir'      => $faker->randomElement($pendidikans),
+                            'pekerjaan_utama'          => $isKK ? $faker->randomElement($pekerjaans) : ($a === 2 ? 'Ibu Rumah Tangga' : 'Pelajar'),
+                            'jabatan'                  => $isKK ? 'Anggota' : '',
+                            
+                            // Data Wilayah Individu (sinkron dengan keluarga/dasawisma)
+                            'dasa_wisma'               => $namaDasawisma,
+                            'nama_kepala_rumah_tangga' => $kepalaKeluargaName,
+                            'alamat_jalan'             => 'Jl. Jenderal Sudirman No. ' . $faker->buildingNumber(),
+                            'rt'                       => $rt,
+                            'rw'                       => '01',
+                            'desa_kelurahan'           => 'Dompas',
+                            'kecamatan'                => 'Bukit Batu',
+                            'kabupaten_kota'           => 'Bengkalis',
+                            'provinsi'                 => 'Riau',
+                            
+                            // Data Khusus PKK
+                            'akseptor_kb'              => $akseptorKb,
+                            'jenis_akseptor_kb'        => $akseptorKb ? $faker->randomElement(['Pil', 'Suntik', 'IUD', 'Implan']) : null,
+                            'aktif_posyandu'           => $aktifPosyandu,
+                            'frekuensi_posyandu'       => $aktifPosyandu ? $faker->numberBetween(1, 12) . ' kali/tahun' : null,
+                            'ikut_bina_keluarga_balita'=> $faker->boolean(30),
+                            'memiliki_tabungan'        => $faker->boolean(80),
+                            'ikut_kelompok_belajar'    => $ikutBelajar,
+                            'jenis_paket_belajar'      => $ikutBelajar ? $faker->randomElement(['Paket A', 'Paket B', 'Paket C']) : null,
+                            'ikut_paud_sejenis'        => $faker->boolean(10),
+                            'ikut_koperasi'            => $ikutKoperasi,
+                            'jenis_koperasi'           => $ikutKoperasi ? 'Simpan Pinjam' : null,
+                        ]);
+                    }
+                    
+                    // Hitung jumlah laki-laki dan perempuan, update keluarga
+                    $jumlahL = $keluarga->anggotaKeluargas()->where('jenis_kelamin', 'L')->count();
+                    $jumlahP = $keluarga->anggotaKeluargas()->where('jenis_kelamin', 'P')->count();
+                    $keluarga->update([
+                        'jumlah_laki_laki' => $jumlahL,
+                        'jumlah_perempuan' => $jumlahP,
+                    ]);
+                }
+            }
+        }
     }
 }

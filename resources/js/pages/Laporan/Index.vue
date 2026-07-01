@@ -25,7 +25,7 @@ const filterRw = ref(props.active_filters?.rw ?? '');
 const filterDasawisma = ref(props.active_filters?.dasawisma_id ?? '');
 
 function applyFilters() {
-    router.get('/admin/laporan', {
+    router.get(window.location.pathname, {
         rt: filterRt.value || undefined,
         rw: filterRw.value || undefined,
         dasawisma_id: filterDasawisma.value || undefined,
@@ -67,6 +67,12 @@ const paginated = computed(() => filteredFamilies.value.slice((currentPage.value
 
 watch(search, () => { currentPage.value = 1; });
 
+function downloadPdf() {
+    const url = new URL(window.location.href);
+    url.pathname = url.pathname.replace(/\/$/, '') + '/download-pdf';
+    window.open(url.toString(), '_blank');
+}
+
 function printReport() {
     window.print();
 }
@@ -76,6 +82,49 @@ function formatDate(dateStr: string) {
     const d = new Date(dateStr);
     return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+const totals = computed(() => {
+    let t = {
+        kk: 0, l: 0, p: 0,
+        bl: 0, bp: 0, pus: 0, wus: 0, bumil: 0, busui: 0, lansia: 0, buta: 0, khusus: 0,
+        r_sehat: 0, r_tdksehat: 0, r_sampah: 0, r_spal: 0, r_jamban: 0, r_pmi: 0,
+        a_pdam: 0, a_sumur: 0, a_dr: 0, m_beras: 0, m_nonberas: 0,
+        k_up2k: 0, k_tanah: 0, k_industri: 0, k_bakti: 0
+    };
+    filteredFamilies.value.forEach((kk: any) => {
+        t.kk += kk.jumlah_kk || 0;
+        t.l += kk.jumlah_laki_laki || 0;
+        t.p += kk.jumlah_perempuan || 0;
+        t.bl += kk.jumlah_balita_laki || 0;
+        t.bp += kk.jumlah_balita_perempuan || 0;
+        t.pus += kk.jumlah_pus || 0;
+        t.wus += kk.jumlah_wus || 0;
+        t.bumil += kk.jumlah_ibu_hamil || 0;
+        t.busui += kk.jumlah_ibu_menyusui || 0;
+        t.lansia += kk.jumlah_lansia || 0;
+        t.buta += kk.jumlah_buta || 0;
+        t.khusus += kk.jumlah_berkebutuhan_khusus || 0;
+
+        if (kk.sehat_layak_huni) t.r_sehat++; else t.r_tdksehat++;
+        if (kk.memiliki_tempat_sampah) t.r_sampah++;
+        if (kk.memiliki_spal) t.r_spal++;
+        if (kk.memiliki_jamban) t.r_jamban++;
+        if (kk.menempel_stiker_p4k) t.r_pmi++;
+
+        if (kk.sumber_air === 'PDAM') t.a_pdam++;
+        if (kk.sumber_air === 'Sumur') t.a_sumur++;
+        if (kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai') t.a_dr++;
+
+        if (kk.makanan_pokok === 'Beras') t.m_beras++;
+        if (kk.makanan_pokok && kk.makanan_pokok !== 'Beras') t.m_nonberas++;
+
+        if (kk.ikut_up2k) t.k_up2k++;
+        if (kk.ikut_pekarangan) t.k_tanah++;
+        if (kk.ikut_industri) t.k_industri++;
+        if (kk.ikut_kerja_bakti) t.k_bakti++;
+    });
+    return t;
+});
 </script>
 
 <template>
@@ -87,10 +136,16 @@ function formatDate(dateStr: string) {
                 <h1 class="text-2xl font-bold text-gray-800">Laporan & Statistik Desa</h1>
                 <p class="text-sm text-gray-500">Data rekapitulasi warga yang telah diverifikasi</p>
             </div>
-            <button @click="printReport" class="inline-flex items-center gap-2 rounded-xl bg-gray-800 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-900 transition">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Cetak Laporan
-            </button>
+            <div class="flex gap-2">
+                <button @click="downloadPdf" class="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-red-700 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download PDF
+                </button>
+                <button @click="printReport" class="inline-flex items-center gap-2 rounded-xl bg-gray-800 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-900 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Cetak Laporan
+                </button>
+            </div>
         </div>
 
         <!-- Print Header (Hidden on screen) -->
@@ -173,37 +228,184 @@ function formatDate(dateStr: string) {
             </div>
         </div>
 
-        <!-- Tabel Rekapitulasi (Hanya di Layar) -->
-        <div class="rounded-2xl bg-white shadow-sm overflow-hidden border border-gray-100 print:hidden">
-            <table class="w-full text-sm whitespace-nowrap">
-                <thead>
-                    <tr class="border-b border-gray-100 bg-gray-50">
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">No. KK</th>
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Kepala Keluarga</th>
-                        <th class="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Dasawisma</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">RT/RW</th>
-                        <th class="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Jml Anggota</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50">
-                    <tr v-if="paginated.length === 0">
-                        <td colspan="5" class="py-12 text-center text-gray-400">Tidak ada data laporan ditemukan.</td>
-                    </tr>
-                    <tr v-for="kk in paginated" :key="'screen-'+kk.id" class="hover:bg-gray-50 transition">
-                        <td class="px-5 py-3.5 font-mono text-xs text-gray-600">{{ kk.no_kk }}</td>
-                        <td class="px-5 py-3.5 font-medium text-gray-800">{{ kk.nama_kepala_keluarga }}</td>
-                        <td class="px-5 py-3.5 text-gray-600">{{ kk.dasawisma?.nama_dasawisma }}</td>
-                        <td class="px-5 py-3.5 text-center text-gray-600 border-x border-transparent">{{ kk.dasawisma?.rt }} / {{ kk.dasawisma?.rw }}</td>
-                        <td class="px-5 py-3.5 text-center">
-                            <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 font-bold">
-                                {{ kk.anggota_keluargas?.length || 0 }} Orang
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Tabel Rekapitulasi (Screen & Print) -->
+        <div class="rounded-2xl bg-white shadow-sm border border-gray-100 print:border-none print:shadow-none overflow-hidden print:overflow-visible">
+            <div class="overflow-x-auto print:overflow-visible">
+                <table class="w-full text-sm whitespace-nowrap border-collapse print:text-[8px]">
+                    <thead>
+                        <tr class="bg-gray-50 print:bg-transparent">
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">NO</th>
+                            <th rowspan="2" class="px-3 py-2 text-left text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800 sticky left-0 z-10 bg-gray-50 print:static print:bg-transparent min-w-[150px]">NAMA KEPALA RUMAH TANGGA</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">JML<br>KK</th>
+                            <th colspan="2" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">TOTAL</th>
+                            <th colspan="2" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BALITA</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">PUS</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">WUS</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">IBU<br>HAMIL</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">IBU<br>MENYUSUI</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">LANSIA</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BUTA</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BERKEBUTUHAN<br>KHUSUS</th>
+                            <th colspan="6" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KRITERIA RUMAH</th>
+                            <th colspan="3" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SUMBER AIR</th>
+                            <th colspan="2" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">MAKANAN</th>
+                            <th colspan="4" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KEGIATAN WARGA</th>
+                            <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KET</th>
+                        </tr>
+                        <tr class="bg-gray-50 print:bg-transparent">
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">L</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">P</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">L</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">P</th>
+                            
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SEHAT<br>LAYAK<br>HUNI</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">TDK<br>SEHAT</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">TMP<br>SAMPAH</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SPAL</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">JAMBAN</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">STIKER<br>PMI</th>
+                            
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">PDAM</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SUMUR</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">DR</th>
+                            
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BERAS</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">NON<br>BERAS</th>
+                            
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">UP2K</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">MNFT<br>TANAH</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">IND.<br>RT</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KERJA<br>BAKTI</th>
+                        </tr>
+                    </thead>
+                    <tbody class="print:hidden">
+                        <tr v-if="paginated.length === 0">
+                            <td colspan="30" class="py-12 text-center text-gray-400 border border-gray-200">Tidak ada data laporan ditemukan.</td>
+                        </tr>
+                        <template v-else>
+                            <tr v-for="(kk, idx) in paginated" :key="'screen-'+kk.id" class="hover:bg-gray-50 transition">
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ ((currentPage - 1) * perPage) + idx + 1 }}</td>
+                                <td class="px-3 py-2 text-left text-xs font-medium text-gray-800 border border-gray-200 sticky left-0 z-10 bg-white group-hover:bg-gray-50">{{ kk.nama_kepala_keluarga?.toUpperCase() }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_kk || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_laki_laki || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_perempuan || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_balita_laki || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_balita_perempuan || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_pus || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_wus || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_ibu_hamil || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_ibu_menyusui || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_lansia || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_buta || '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_berkebutuhan_khusus || '-' }}</td>
+                                
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.sehat_layak_huni ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ !kk.sehat_layak_huni ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.memiliki_tempat_sampah ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.memiliki_spal ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.memiliki_jamban ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.menempel_stiker_p4k ? '✓' : '-' }}</td>
+                                
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.sumber_air === 'PDAM' ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.sumber_air === 'Sumur' ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ (kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai') ? '✓' : '-' }}</td>
+                                
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.makanan_pokok === 'Beras' ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ (kk.makanan_pokok !== 'Beras' && kk.makanan_pokok) ? '✓' : '-' }}</td>
+                                
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_up2k ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_pekarangan ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_industri ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_kerja_bakti ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">-</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                    <tbody class="hidden print:table-row-group">
+                        <tr v-if="filteredFamilies.length === 0">
+                            <td colspan="30" class="py-12 text-center text-[8px] text-gray-900 border border-gray-800">Tidak ada data laporan ditemukan.</td>
+                        </tr>
+                        <template v-else>
+                            <tr v-for="(kk, idx) in filteredFamilies" :key="'print-'+kk.id">
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ idx + 1 }}</td>
+                                <td class="px-2 py-1 text-left text-[7px] font-medium text-black border border-gray-800 truncate max-w-[120px]">{{ kk.nama_kepala_keluarga?.toUpperCase() }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_kk || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_laki_laki || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_perempuan || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_balita_laki || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_balita_perempuan || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_pus || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_wus || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_ibu_hamil || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_ibu_menyusui || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_lansia || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_buta || '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_berkebutuhan_khusus || '-' }}</td>
+                                
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.sehat_layak_huni ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ !kk.sehat_layak_huni ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.memiliki_tempat_sampah ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.memiliki_spal ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.memiliki_jamban ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.menempel_stiker_p4k ? '✓' : '-' }}</td>
+                                
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.sumber_air === 'PDAM' ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.sumber_air === 'Sumur' ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ (kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai') ? '✓' : '-' }}</td>
+                                
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.makanan_pokok === 'Beras' ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ (kk.makanan_pokok !== 'Beras' && kk.makanan_pokok) ? '✓' : '-' }}</td>
+                                
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_up2k ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_pekarangan ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_industri ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_kerja_bakti ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">-</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                    <tfoot class="print:table-footer-group">
+                        <tr class="font-bold bg-gray-100 print:bg-transparent border-t-2 border-gray-300 print:border-gray-800">
+                            <td colspan="2" class="px-3 py-2 text-left text-[10px] print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800 sticky left-0 z-10 bg-gray-100 print:static print:bg-transparent">JUMLAH</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.kk || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.l || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.p || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.bl || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.bp || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.pus || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.wus || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.bumil || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.busui || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.lansia || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.buta || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.khusus || '-' }}</td>
+                            
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.r_sehat || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.r_tdksehat || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.r_sampah || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.r_spal || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.r_jamban || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.r_pmi || '-' }}</td>
+                            
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.a_pdam || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.a_sumur || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.a_dr || '-' }}</td>
+                            
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.m_beras || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.m_nonberas || '-' }}</td>
+                            
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.k_up2k || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.k_tanah || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.k_industri || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">{{ totals.k_bakti || '-' }}</td>
+                            <td class="px-2 py-2 text-center text-xs print:text-[7px] text-gray-800 print:text-black border border-gray-200 print:border-gray-800">-</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
             <!-- Pagination -->
-            <div v-if="totalPages > 1" class="flex items-center justify-between border-t border-gray-100 px-5 py-3">
+            <div v-if="totalPages > 1" class="flex items-center justify-between border-t border-gray-100 px-5 py-3 print:hidden">
                 <p class="text-xs text-gray-400">Menampilkan {{ paginated.length }} dari {{ filteredFamilies.length }} KK</p>
                 <div class="flex gap-1">
                     <button @click="currentPage--" :disabled="currentPage === 1" class="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition">← Prev</button>
@@ -212,44 +414,26 @@ function formatDate(dateStr: string) {
                 </div>
             </div>
         </div>
-
-        <!-- Tabel Data Penduduk (Hanya Saat Print) -->
-        <div class="hidden print:block w-full">
-            <table class="w-full text-sm whitespace-nowrap border-collapse border border-gray-800">
-                <thead>
-                    <tr class="bg-gray-100 border-b border-gray-800">
-                        <th class="px-2 py-1.5 text-left border border-gray-800 text-xs font-semibold text-gray-800">No. KK</th>
-                        <th class="px-2 py-1.5 text-left border border-gray-800 text-xs font-semibold text-gray-800">NIK</th>
-                        <th class="px-2 py-1.5 text-left border border-gray-800 text-xs font-semibold text-gray-800">Nama Warga</th>
-                        <th class="px-2 py-1.5 text-center border border-gray-800 text-xs font-semibold text-gray-800">L/P</th>
-                        <th class="px-2 py-1.5 text-left border border-gray-800 text-xs font-semibold text-gray-800">Tgl Lahir</th>
-                        <th class="px-2 py-1.5 text-left border border-gray-800 text-xs font-semibold text-gray-800">Hubungan</th>
-                        <th class="px-2 py-1.5 text-left border border-gray-800 text-xs font-semibold text-gray-800">Dasawisma</th>
-                        <th class="px-2 py-1.5 text-center border border-gray-800 text-xs font-semibold text-gray-800">RT/RW</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template v-if="filteredFamilies.length === 0">
-                        <tr>
-                            <td colspan="8" class="px-2 py-4 text-center border border-gray-800 text-gray-500">Tidak ada data penduduk ditemukan.</td>
-                        </tr>
-                    </template>
-                    <template v-else>
-                        <template v-for="kk in filteredFamilies" :key="'print-kk-'+kk.id">
-                            <tr v-for="anggota in kk.anggota_keluargas" :key="'print-anggota-'+anggota.id" class="break-inside-avoid">
-                                <td class="px-2 py-1 border border-gray-800 font-mono text-[11px] align-top">{{ kk.no_kk }}</td>
-                                <td class="px-2 py-1 border border-gray-800 font-mono text-[11px] align-top">{{ anggota.nik }}</td>
-                                <td class="px-2 py-1 border border-gray-800 text-[11px] align-top">{{ anggota.nama_anggota }}</td>
-                                <td class="px-2 py-1 border border-gray-800 text-[11px] text-center align-top">{{ anggota.jenis_kelamin }}</td>
-                                <td class="px-2 py-1 border border-gray-800 text-[11px] align-top whitespace-nowrap">{{ formatDate(anggota.tanggal_lahir) }}</td>
-                                <td class="px-2 py-1 border border-gray-800 text-[11px] align-top">{{ anggota.status_dalam_keluarga }}</td>
-                                <td class="px-2 py-1 border border-gray-800 text-[11px] align-top">{{ kk.dasawisma?.nama_dasawisma }}</td>
-                                <td class="px-2 py-1 border border-gray-800 text-[11px] text-center align-top">{{ kk.dasawisma?.rt }}/{{ kk.dasawisma?.rw }}</td>
-                            </tr>
-                        </template>
-                    </template>
-                </tbody>
-            </table>
-        </div>
     </AppLayout>
 </template>
+
+<style scoped>
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    table, th, td {
+        border: 1px solid black !important;
+        color: black !important;
+    }
+    thead th {
+        background-color: #f3f4f6 !important;
+        font-weight: bold !important;
+    }
+    tfoot td {
+        background-color: #f3f4f6 !important;
+        font-weight: bold !important;
+    }
+}
+</style>

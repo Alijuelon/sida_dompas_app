@@ -3,17 +3,19 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SidaModal from '@/components/SidaModal.vue';
+import SidaConfirm from '@/components/SidaConfirm.vue';
 
 const props = defineProps<{ verifikasi: any }>();
 
 const approveForm = useForm({ catatan: '' });
 const rejectForm = useForm({ catatan: '' });
 const showRejectModal = ref(false);
+const showApproveConfirm = ref(false);
 
 function approve() {
-    if (confirm('Setujui data KK ini?')) {
-        approveForm.post(`/admin/verifikasi/${props.verifikasi.id}/approve`);
-    }
+    approveForm.post(`/admin/verifikasi/${props.verifikasi.id}/approve`, {
+        onSuccess: () => { showApproveConfirm.value = false; }
+    });
 }
 
 function reject() {
@@ -54,7 +56,7 @@ function reject() {
                         {{ verifikasi.status_verifikasi }}
                     </span>
                     <template v-if="verifikasi.status_verifikasi === 'menunggu'">
-                        <button @click="approve" :disabled="approveForm.processing" class="rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm active:scale-95 shadow-emerald-200">
+                        <button @click="showApproveConfirm = true" :disabled="approveForm.processing" class="rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-sm active:scale-95 shadow-emerald-200">
                             SETUJUI
                         </button>
                         <button @click="showRejectModal = true" class="rounded-xl bg-red-50 text-red-600 border border-red-100 px-6 py-2.5 text-xs font-black hover:bg-red-100 transition-all active:scale-95">
@@ -160,5 +162,17 @@ function reject() {
                 </div>
             </form>
         </SidaModal>
+
+        <!-- Konfirmasi Setujui -->
+        <SidaConfirm
+            :show="showApproveConfirm"
+            type="success"
+            title="Setujui Data KK"
+            message="Apakah Anda yakin ingin menyetujui data KK ini? Data yang disetujui akan dianggap valid."
+            confirm-text="Ya, Setujui"
+            confirm-class="bg-emerald-600 hover:bg-emerald-700 text-white"
+            @confirm="approve"
+            @cancel="showApproveConfirm = false"
+        />
     </AppLayout>
 </template>

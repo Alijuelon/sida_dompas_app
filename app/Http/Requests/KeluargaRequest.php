@@ -9,7 +9,7 @@ class KeluargaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isKader();
+        return auth()->check() && (auth()->user()->isKader() || auth()->user()->isAdmin());
     }
 
     public function rules(): array
@@ -25,6 +25,23 @@ class KeluargaRequest extends FormRequest
                     : 'unique:keluargas,no_kk',
             ],
             'nama_kepala_keluarga'  => ['required', 'string', 'max:255'],
+            'rt'                    => ['nullable', 'string', 'max:10'],
+            'rw'                    => ['nullable', 'string', 'max:10'],
+            'dusun_lingkungan'      => ['nullable', 'string', 'max:255'],
+            'desa'                  => ['nullable', 'string', 'max:255'],
+            'kecamatan'             => ['nullable', 'string', 'max:255'],
+            'kabupaten'             => ['nullable', 'string', 'max:255'],
+            'provinsi'              => ['nullable', 'string', 'max:255'],
+            'jumlah_kk'             => ['nullable', 'integer', 'min:0'],
+            'jumlah_laki_laki'      => ['nullable', 'integer', 'min:0'],
+            'jumlah_perempuan'      => ['nullable', 'integer', 'min:0'],
+            'jumlah_balita'         => ['nullable', 'integer', 'min:0'],
+            'jumlah_pus'            => ['nullable', 'integer', 'min:0'],
+            'jumlah_wus'            => ['nullable', 'integer', 'min:0'],
+            'jumlah_buta'           => ['nullable', 'integer', 'min:0'],
+            'jumlah_ibu_hamil'      => ['nullable', 'integer', 'min:0'],
+            'jumlah_ibu_menyusui'   => ['nullable', 'integer', 'min:0'],
+            'jumlah_lansia'         => ['nullable', 'integer', 'min:0'],
         ];
     }
 

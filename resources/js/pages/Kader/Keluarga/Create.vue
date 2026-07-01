@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -10,294 +10,603 @@ const props = defineProps<{
 const step = ref(1);
 
 const anggotaTemplate = () => ({
+    no_reg: '',
     nik: '',
     nama_anggota: '',
+    status_dalam_keluarga: 'Anggota Keluarga',
+    status_perkawinan: 'Lajang',
     jenis_kelamin: 'L',
+    agama: 'Islam',
+    tempat_lahir: '',
     tanggal_lahir: '',
-    agama: '',
+    umur: '',
+    jabatan: '',
     pendidikan: '',
     pekerjaan: '',
-    status_dalam_keluarga: 'Kepala Keluarga',
-    status_perkawinan: '',
+    pendidikan_terakhir: '',
+    pekerjaan_utama: '',
+    dasa_wisma: '',
+    nama_kepala_rumah_tangga: '',
+    alamat_jalan: '',
+    rt: '',
+    rw: '',
+    desa_kelurahan: '',
+    kecamatan: '',
+    kabupaten_kota: '',
+    provinsi: '',
+    akseptor_kb: '0',
+    jenis_akseptor_kb: '',
+    aktif_posyandu: '0',
+    frekuensi_posyandu: '',
+    ikut_kelompok_belajar: '0',
+    jenis_paket_belajar: '',
+    ikut_koperasi: '0',
+    jenis_koperasi: '',
+    ikut_bina_keluarga_balita: '0',
+    memiliki_tabungan: '0',
+    ikut_paud_sejenis: '0',
 });
 
 const form = useForm({
-    dasawisma_id: '',
     no_kk: '',
     nama_kepala_keluarga: '',
+    dasawisma_id: '',
+    rt: '',
+    rw: '',
+    dusun_lingkungan: '',
+    desa: 'Dompas',
+    kecamatan: 'Bukit Batu',
+    kabupaten: 'Bengkalis',
+    provinsi: 'Riau',
+    
+    jumlah_kk: 1,
+    jumlah_laki_laki: 0,
+    jumlah_perempuan: 0,
+    jumlah_balita: 0,
+    jumlah_pus: 0,
+    jumlah_wus: 0,
+    jumlah_buta: 0,
+    jumlah_ibu_hamil: 0,
+    jumlah_ibu_menyusui: 0,
+    jumlah_lansia: 0,
+    
     anggota: [anggotaTemplate()],
+});
+
+onMounted(() => {
+    form.anggota[0].status_dalam_keluarga = 'Kepala Rumah Tangga';
 });
 
 function tambahAnggota() {
     const t = anggotaTemplate();
-    t.status_dalam_keluarga = '';
+    if (form.anggota.length === 0) {
+        t.status_dalam_keluarga = 'Kepala Rumah Tangga';
+    }
     form.anggota.push(t);
 }
 
+const toast = ref({ show: false, message: '' });
+let toastTimeout: any = null;
+
+function showErrorToast(msg: string) {
+    toast.value.message = msg;
+    toast.value.show = true;
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.value.show = false;
+    }, 4000);
+}
+
 function hapusAnggota(idx: number) {
-    if (form.anggota.length > 1) form.anggota.splice(idx, 1);
+    if (form.anggota.length > 1) {
+        form.anggota.splice(idx, 1);
+    } else {
+        showErrorToast('Minimal harus ada 1 anggota (Kepala Keluarga)!');
+    }
 }
 
 function nextStep() {
-    if (!form.dasawisma_id || !form.no_kk || !form.nama_kepala_keluarga) {
-        alert('Lengkapi semua data KK terlebih dahulu!');
-        return;
+    form.clearErrors();
+    if (step.value === 1) {
+        let hasError = false;
+        
+        if (!form.no_kk) { form.setError('no_kk', 'Nomor KK wajib diisi.'); hasError = true; }
+        else if (form.no_kk.length !== 16) { form.setError('no_kk', 'Nomor KK harus tepat 16 digit.'); hasError = true; }
+        
+        if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Keluarga wajib diisi.'); hasError = true; }
+        if (!form.dasawisma_id) { form.setError('dasawisma_id', 'Dasawisma wajib dipilih.'); hasError = true; }
+        
+        if (hasError) {
+            showErrorToast('Mohon lengkapi field yang ditandai bintang (*) sebelum melanjutkan.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (form.anggota.length > 0 && form.nama_kepala_keluarga && !form.anggota[0].nama_anggota) {
+            form.anggota[0].nama_anggota = form.nama_kepala_keluarga;
+        }
     }
-    step.value = 2;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    step.value++;
+}
+
+function prevStep() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    step.value--;
 }
 
 function submit() {
     form.post('/kader/keluarga');
 }
 
-const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
-const pendidikanOptions = ['Tidak Sekolah', 'SD', 'SMP', 'SMA/SMK', 'D1/D2/D3', 'S1', 'S2', 'S3'];
-const pekerjaanOptions = ['Tidak Bekerja', 'Petani', 'Nelayan', 'Pedagang', 'PNS', 'Swasta', 'Wiraswasta', 'TNI/Polri', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Lainnya'];
-const statusKKOptions = ['Kepala Keluarga', 'Istri', 'Anak', 'Menantu', 'Cucu', 'Orang Tua', 'Mertua', 'Lainnya'];
-const statusKawinOptions = ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'];
-
-/* Shared input & select classes */
-const inputCls  = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition';
-const selectCls = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition appearance-none';
-const labelCls  = 'mb-1.5 block text-xs font-semibold text-gray-600 uppercase tracking-wide';
+const progressWidth = () => {
+    if (step.value === 1) return '0%';
+    if (step.value === 2) return '50%';
+    return '100%';
+};
 </script>
 
 <template>
     <Head title="Input KK Baru" />
     <AppLayout>
-        <div class="mx-auto max-w-3xl">
+        <!-- Local Toast Alert -->
+
+
+        <div class="mx-auto max-w-5xl">
             <!-- Header -->
-            <div class="mb-6">
-                <a href="/kader/keluarga" class="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-emerald-600 transition">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                    Kembali ke Daftar KK
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Formulir Pendataan Keluarga TP PKK</h2>
+                    <p class="text-sm text-gray-500 mt-1">Lengkapi data keluarga dan anggota dengan benar.</p>
+                </div>
+                <a href="/kader/keluarga" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-emerald-600 transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i> Batal & Kembali
                 </a>
-                <h1 class="text-2xl font-bold text-gray-800">Input Data KK Baru</h1>
-                <p class="mt-0.5 text-sm text-gray-500">Data akan otomatis dikirimkan ke admin untuk verifikasi</p>
             </div>
-
-            <!-- Step Indicator -->
-            <div class="mb-8 flex items-center gap-3">
-                <div class="flex items-center gap-2.5">
-                    <div :class="step >= 1 ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 border border-gray-200'"
-                        class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all">1</div>
-                    <span class="text-sm font-semibold text-gray-700">Data Kartu Keluarga</span>
-                </div>
-                <div class="h-px flex-1 rounded-full" :class="step >= 2 ? 'bg-emerald-400' : 'bg-gray-200'"></div>
-                <div class="flex items-center gap-2.5">
-                    <div :class="step >= 2 ? 'bg-emerald-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 border border-gray-200'"
-                        class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all">2</div>
-                    <span class="text-sm font-semibold text-gray-700">Data Anggota Keluarga</span>
-                </div>
-            </div>
-
-            <form @submit.prevent="submit">
-                <!-- ============ STEP 1 ============ -->
-                <div v-if="step === 1" class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-                    <!-- Card header -->
-                    <div class="border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4">
-                        <h2 class="text-base font-bold text-gray-800">Langkah 1 — Data Kartu Keluarga</h2>
-                        <p class="mt-0.5 text-xs text-gray-500">Isi informasi KK dengan lengkap dan benar</p>
+            
+            <!-- Modern Error Alert -->
+            <div v-if="Object.keys(form.errors).length > 0" class="mb-6 rounded-2xl bg-red-50/80 backdrop-blur-sm border border-red-200 p-5 shadow-sm transition-all duration-300">
+                <div class="flex items-start gap-4">
+                    <div class="bg-red-100 text-red-600 rounded-xl p-2.5 mt-0.5 shadow-sm">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
                     </div>
-                    <div class="space-y-5 px-6 py-6">
-                        <!-- Dasawisma -->
+                    <div class="flex-1">
+                        <h3 class="text-sm font-bold text-red-800">Terdapat Kesalahan Pengisian</h3>
+                        <p class="text-xs text-red-600 mt-1 mb-3">Mohon periksa kembali form Anda:</p>
+                        <ul class="text-xs text-red-700 space-y-1.5 grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                            <li v-for="(error, key) in form.errors" :key="key" class="flex items-start gap-2 bg-white/50 p-2 rounded-lg border border-red-100">
+                                <i class="fa-solid fa-circle-xmark text-red-400 mt-0.5 shrink-0"></i>
+                                <span class="font-medium leading-tight">{{ error }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEPPER INDICATOR -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between relative">
+                    <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full z-0"></div>
+                    <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-emerald-600 rounded-full z-0 transition-all duration-500 ease-in-out" :style="{ width: progressWidth() }"></div>
+                    
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-colors duration-300 ring-4 ring-gray-50', step >= 1 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500']">
+                            <i v-if="step > 1" class="fa-solid fa-check"></i>
+                            <span v-else>1</span>
+                        </div>
+                        <span :class="['mt-2 text-xs font-semibold px-1', step >= 1 ? 'text-emerald-700' : 'text-gray-500']">Data Wilayah</span>
+                    </div>
+                    
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-colors duration-300 ring-4 ring-gray-50', step >= 2 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500']">
+                            <i v-if="step > 2" class="fa-solid fa-check"></i>
+                            <span v-else>2</span>
+                        </div>
+                        <span :class="['mt-2 text-xs font-semibold px-1', step >= 2 ? 'text-emerald-700' : 'text-gray-500']">Rekap Keluarga</span>
+                    </div>
+                    
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div :class="['w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-colors duration-300 ring-4 ring-gray-50', step >= 3 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-500']">
+                            3
+                        </div>
+                        <span :class="['mt-2 text-xs font-semibold px-1', step >= 3 ? 'text-emerald-700' : 'text-gray-500']">Warga PKK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM START -->
+            <form @submit.prevent="submit" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                
+                <!-- ================= STEP 1 ================= -->
+                <div v-show="step === 1" class="p-6 md:p-8 transition-all duration-300">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="bg-indigo-50 text-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-map-location-dot text-lg"></i>
+                        </div>
                         <div>
-                            <label :class="labelCls">Dasawisma <span class="text-red-500 normal-case">*</span></label>
-                            <div class="relative">
-                                <select v-model="form.dasawisma_id" :class="selectCls">
-                                    <option value="" class="text-gray-400">-- Pilih Dasawisma --</option>
-                                    <option v-for="ds in dasawismas" :key="ds.id" :value="ds.id" class="text-gray-800">
-                                        {{ ds.nama_dasawisma }} (RT {{ ds.rt }}/RW {{ ds.rw }})
-                                    </option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </div>
+                            <h3 class="text-xl font-bold text-gray-800">Identitas Wilayah & Keluarga</h3>
+                            <p class="text-sm text-gray-500">Masukkan data pokok kartu keluarga dan wilayah.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="relative">
+                            <input v-model="form.no_kk" type="text" maxlength="16" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer font-mono" placeholder=" " required />
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">No. Kartu Keluarga <span class="text-red-500">*</span></label>
+                        </div>
+                        
+                        <div class="relative lg:col-span-2">
+                            <input v-model="form.nama_kepala_keluarga" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " required />
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Nama Kepala Rumah Tangga <span class="text-red-500">*</span></label>
+                        </div>
+                        
+                        <div class="relative">
+                            <select v-model="form.dasawisma_id" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
+                                <option value="" disabled>-- Pilih Dasawisma --</option>
+                                <option v-for="ds in dasawismas" :key="ds.id" :value="ds.id">{{ ds.nama_dasawisma }}</option>
+                            </select>
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Dasawisma <span class="text-red-500">*</span></label>
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <div class="relative w-1/2">
+                                <input v-model="form.rt" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT</label>
                             </div>
-                            <p v-if="form.errors.dasawisma_id" class="mt-1.5 flex items-center gap-1 text-xs text-red-600">
-                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                                {{ form.errors.dasawisma_id }}
-                            </p>
+                            <div class="relative w-1/2">
+                                <input v-model="form.rw" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW</label>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <select v-model="form.dusun_lingkungan" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
+                                <option value="" disabled>-- Pilih Dusun --</option>
+                                <option value="Murni">Murni</option>
+                                <option value="Lestari">Lestari</option>
+                            </select>
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Dusun / Lingkungan <span class="text-red-500">*</span></label>
                         </div>
 
-                        <!-- No KK -->
-                        <div>
-                            <label :class="labelCls">Nomor KK <span class="text-red-500 normal-case">*</span></label>
-                            <input v-model="form.no_kk" type="text" maxlength="16" placeholder="16 digit nomor KK" :class="inputCls" class="font-mono" />
-                            <p v-if="form.errors.no_kk" class="mt-1.5 flex items-center gap-1 text-xs text-red-600">
-                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                                {{ form.errors.no_kk }}
-                            </p>
+                        <div class="relative">
+                            <input v-model="form.desa" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-500 bg-gray-100 border border-gray-200" readonly />
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Desa</label>
                         </div>
-
-                        <!-- Nama KK -->
-                        <div>
-                            <label :class="labelCls">Nama Kepala Keluarga <span class="text-red-500 normal-case">*</span></label>
-                            <input v-model="form.nama_kepala_keluarga" type="text" placeholder="Nama lengkap sesuai KK" :class="inputCls" />
-                            <p v-if="form.errors.nama_kepala_keluarga" class="mt-1.5 flex items-center gap-1 text-xs text-red-600">
-                                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                                {{ form.errors.nama_kepala_keluarga }}
-                            </p>
+                        <div class="relative">
+                            <input v-model="form.kecamatan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-500 bg-gray-100 border border-gray-200" readonly />
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Kecamatan</label>
                         </div>
-                    </div>
-
-                    <!-- Footer -->
-                    <div class="flex items-center gap-3 border-t border-gray-100 bg-gray-50/50 px-6 py-4">
-                        <button type="button" @click="nextStep"
-                            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95">
-                            Selanjutnya
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                        <a href="/kader/keluarga" class="text-sm font-medium text-gray-500 transition hover:text-gray-700">Batal</a>
+                        <div class="relative">
+                            <input :value="form.kabupaten + ', ' + form.provinsi" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-500 bg-gray-100 border border-gray-200" readonly />
+                            <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Kab/Kota & Provinsi</label>
+                        </div>
                     </div>
                 </div>
 
-                <!-- ============ STEP 2 ============ -->
-                <div v-if="step === 2" class="space-y-4">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h2 class="text-base font-bold text-gray-800">Langkah 2 — Data Anggota Keluarga</h2>
-                            <p class="text-xs text-gray-500">Minimal 1 anggota (kepala keluarga)</p>
+                <!-- ================= STEP 2 ================= -->
+                <div v-show="step === 2" class="p-6 md:p-8 transition-all duration-300">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="bg-teal-50 text-teal-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
+                            <i class="fa-solid fa-chart-pie text-lg"></i>
                         </div>
-                        <button type="button" @click="tambahAnggota"
-                            class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 active:scale-95">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Tambah Anggota
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Rekapitulasi Keluarga</h3>
+                            <p class="text-sm text-gray-500">Jumlah status dan kategori dalam keluarga.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-users text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Jml KK</label>
+                            <input v-model="form.jumlah_kk" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Laki-Laki</label>
+                            <input v-model="form.jumlah_laki_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-venus text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Perempuan</label>
+                            <input v-model="form.jumlah_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita</label>
+                            <input v-model="form.jumlah_balita" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Pasangan Usia Subur</label>
+                            <input v-model="form.jumlah_pus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-person-dress text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Wanita Usia Subur</label>
+                            <input v-model="form.jumlah_wus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-eye-slash text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">3 Buta</label>
+                            <input v-model="form.jumlah_buta" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-person-pregnant text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Hamil</label>
+                            <input v-model="form.jumlah_ibu_hamil" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-person-breastfeeding text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Menyusui</label>
+                            <input v-model="form.jumlah_ibu_menyusui" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-person-cane text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Lansia</label>
+                            <input v-model="form.jumlah_lansia" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= STEP 3 ================= -->
+                <div v-show="step === 3" class="p-6 md:p-8 bg-gray-50/50 transition-all duration-300">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-emerald-50 text-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
+                                <i class="fa-solid fa-users-viewfinder text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Detail Anggota Warga PKK</h3>
+                                <p class="text-sm text-gray-500">Masukkan detail tiap anggota keluarga.</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="tambahAnggota" class="inline-flex items-center justify-center gap-2 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
+                            <i class="fa-solid fa-user-plus"></i> Tambah Anggota
                         </button>
                     </div>
-
-                    <div v-for="(anggota, idx) in form.anggota" :key="idx"
-                        class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-                        <!-- Card header -->
-                        <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50/70 px-5 py-3.5">
-                            <div class="flex items-center gap-2.5">
-                                <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs font-bold text-emerald-700">
-                                    {{ idx + 1 }}
-                                </div>
-                                <span class="text-sm font-semibold text-gray-700">
-                                    {{ idx === 0 ? 'Kepala Keluarga' : `Anggota ke-${idx + 1}` }}
+                    
+                    <div class="space-y-6">
+                        <div v-for="(anggota, idx) in form.anggota" :key="idx" class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm relative group transition-all duration-300">
+                            <button type="button" @click="hapusAnggota(idx)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-2.5 rounded-xl transition-all border border-transparent hover:border-red-200 shadow-sm" title="Hapus Anggota">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            
+                            <div class="flex items-center mb-6 pb-4 border-b border-gray-100 gap-3">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">{{ idx + 1 }}</div>
+                                <span :class="['text-sm font-bold uppercase tracking-wide', idx === 0 ? 'text-emerald-700' : 'text-gray-800']">
+                                    {{ idx === 0 ? 'Kepala Keluarga (Wajib)' : 'Anggota Keluarga' }}
                                 </span>
                             </div>
-                            <button v-if="form.anggota.length > 1" type="button" @click="hapusAnggota(idx)"
-                                class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100">
-                                Hapus
-                            </button>
-                        </div>
 
-                        <div class="grid gap-4 p-5 md:grid-cols-2">
-                            <div>
-                                <label :class="labelCls">NIK (16 digit) <span class="text-red-500 normal-case">*</span></label>
-                                <input v-model="anggota.nik" type="text" maxlength="16" placeholder="NIK 16 digit" :class="inputCls" class="font-mono" />
-                                <p v-if="form.errors[`anggota.${idx}.nik`]" class="mt-1 text-xs text-red-600">{{ form.errors[`anggota.${idx}.nik`] }}</p>
-                            </div>
-                            <div>
-                                <label :class="labelCls">Nama Lengkap <span class="text-red-500 normal-case">*</span></label>
-                                <input v-model="anggota.nama_anggota" type="text" placeholder="Nama lengkap" :class="inputCls" />
-                            </div>
-                            <div>
-                                <label :class="labelCls">Jenis Kelamin <span class="text-red-500 normal-case">*</span></label>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                                <!-- Data Pokok -->
                                 <div class="relative">
-                                    <select v-model="anggota.jenis_kelamin" :class="selectCls">
-                                        <option value="L" class="text-gray-800">Laki-laki</option>
-                                        <option value="P" class="text-gray-800">Perempuan</option>
+                                    <input v-model="anggota.no_reg" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">No. Registrasi</label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.nik" type="text" maxlength="16" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer font-mono" placeholder=" " required />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">NIK (No KTP) <span class="text-red-500">*</span></label>
+                                </div>
+                                <div class="relative md:col-span-2">
+                                    <input v-model="anggota.nama_anggota" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " required />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Nama Lengkap <span class="text-red-500">*</span></label>
+                                </div>
+
+                                <div class="relative">
+                                    <select v-model="anggota.status_dalam_keluarga" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
+                                        <option value="Kepala Rumah Tangga">Kepala Rumah Tangga</option>
+                                        <option value="Anggota Keluarga">Anggota Keluarga</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Status Dlm Keluarga <span class="text-red-500">*</span></label>
+                                </div>
+                                <div class="relative">
+                                    <select v-model="anggota.status_perkawinan" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none">
+                                        <option value="Lajang">Lajang</option>
+                                        <option value="Menikah">Menikah</option>
+                                        <option value="Janda">Janda</option>
+                                        <option value="Duda">Duda</option>
+                                    </select>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Status Perkawinan</label>
+                                </div>
+                                <div class="relative">
+                                    <select v-model="anggota.jenis_kelamin" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
+                                        <option value="L">Laki-Laki</option>
+                                        <option value="P">Perempuan</option>
+                                    </select>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Jenis Kelamin <span class="text-red-500">*</span></label>
+                                </div>
+                                <div class="relative">
+                                    <select v-model="anggota.agama" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none">
+                                        <option value="Islam">Islam</option>
+                                        <option value="Kristen Protestan">Kristen Protestan</option>
+                                        <option value="Kristen Katolik">Kristen Katolik</option>
+                                        <option value="Hindu">Hindu</option>
+                                        <option value="Buddha">Buddha</option>
+                                        <option value="Konghucu">Konghucu</option>
+                                    </select>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Agama</label>
+                                </div>
+                                
+                                <div class="relative">
+                                    <input v-model="anggota.tempat_lahir" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Tempat Lahir</label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.tanggal_lahir" type="date" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" required />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Tanggal Lahir <span class="text-red-500">*</span></label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.umur" type="number" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Umur</label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.jabatan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Jabatan PKK</label>
+                                </div>
+
+                                <!-- Pendidikan & Pekerjaan -->
+                                <div class="relative md:col-span-2">
+                                    <select v-model="anggota.pendidikan_terakhir" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none">
+                                        <option value="">- Pilih -</option>
+                                        <option value="Tidak Tamat SD">Tidak Tamat SD</option>
+                                        <option value="SD/MI">SD/MI</option>
+                                        <option value="SMP">SMP</option>
+                                        <option value="SMU/SMK">SMU/SMK</option>
+                                        <option value="Diploma">Diploma</option>
+                                        <option value="S1">S1</option>
+                                        <option value="S2">S2</option>
+                                        <option value="S3">S3</option>
+                                    </select>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pendidikan Terakhir</label>
+                                </div>
+                                <div class="relative md:col-span-2">
+                                    <input v-model="anggota.pekerjaan_utama" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Pekerjaan Utama</label>
+                                </div>
+
+                                <!-- Data Wilayah Individu -->
+                                <div class="md:col-span-4 mt-6 border-t border-gray-100 pt-6">
+                                    <span class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-map-pin text-emerald-500"></i> Alamat & Identitas Wilayah</span>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.dasa_wisma" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Dasa Wisma</label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.nama_kepala_rumah_tangga" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kepala Rumah Tangga</label>
+                                </div>
+                                <div class="relative md:col-span-2">
+                                    <input v-model="anggota.alamat_jalan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Alamat / Jalan</label>
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="relative w-1/2">
+                                        <input v-model="anggota.rt" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                        <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT</label>
+                                    </div>
+                                    <div class="relative w-1/2">
+                                        <input v-model="anggota.rw" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                        <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW</label>
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label :class="labelCls">Tanggal Lahir <span class="text-red-500 normal-case">*</span></label>
-                                <input v-model="anggota.tanggal_lahir" type="date" :class="inputCls" />
-                            </div>
-                            <div>
-                                <label :class="labelCls">Agama</label>
                                 <div class="relative">
-                                    <select v-model="anggota.agama" :class="selectCls">
-                                        <option value="" class="text-gray-400">-- Pilih --</option>
-                                        <option v-for="a in agamaOptions" :key="a" :value="a" class="text-gray-800">{{ a }}</option>
+                                    <input v-model="anggota.desa_kelurahan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Desa/Kelurahan</label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.kecamatan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kecamatan</label>
+                                </div>
+                                <div class="relative">
+                                    <input v-model="anggota.kabupaten_kota" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kab/Kota</label>
+                                </div>
+                                
+                                <!-- Data PKK Khusus -->
+                                <div class="md:col-span-4 mt-6 border-t border-emerald-100 pt-6">
+                                    <span class="text-sm font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-3 py-1.5 rounded-lg flex items-center gap-2 w-fit"><i class="fa-solid fa-leaf"></i> Data Khusus Warga PKK</span>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Akseptor KB?</label>
+                                    <select v-model="anggota.akseptor_kb" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    <div v-if="anggota.akseptor_kb === '1'" class="mt-3 pt-3 border-t border-gray-200">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Akseptor KB</label>
+                                        <input v-model="anggota.jenis_akseptor_kb" type="text" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label :class="labelCls">Pendidikan</label>
-                                <div class="relative">
-                                    <select v-model="anggota.pendidikan" :class="selectCls">
-                                        <option value="" class="text-gray-400">-- Pilih --</option>
-                                        <option v-for="p in pendidikanOptions" :key="p" :value="p" class="text-gray-800">{{ p }}</option>
+
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Aktif Posyandu?</label>
+                                    <select v-model="anggota.aktif_posyandu" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    <div v-if="anggota.aktif_posyandu === '1'" class="mt-3 pt-3 border-t border-gray-200">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Frekuensi Posyandu</label>
+                                        <input v-model="anggota.frekuensi_posyandu" type="text" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label :class="labelCls">Pekerjaan</label>
-                                <div class="relative">
-                                    <select v-model="anggota.pekerjaan" :class="selectCls">
-                                        <option value="" class="text-gray-400">-- Pilih --</option>
-                                        <option v-for="pk in pekerjaanOptions" :key="pk" :value="pk" class="text-gray-800">{{ pk }}</option>
+
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut Kelompok Belajar?</label>
+                                    <select v-model="anggota.ikut_kelompok_belajar" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    <div v-if="anggota.ikut_kelompok_belajar === '1'" class="mt-3 pt-3 border-t border-gray-200">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Paket Belajar</label>
+                                        <select v-model="anggota.jenis_paket_belajar" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                            <option value="">-Pilih-</option>
+                                            <option value="Paket A">Paket A</option>
+                                            <option value="Paket B">Paket B</option>
+                                            <option value="Paket C">Paket C</option>
+                                            <option value="KF">KF</option>
+                                        </select>
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label :class="labelCls">Status dalam Keluarga</label>
-                                <div class="relative">
-                                    <select v-model="anggota.status_dalam_keluarga" :class="selectCls">
-                                        <option value="" class="text-gray-400">-- Pilih --</option>
-                                        <option v-for="s in statusKKOptions" :key="s" :value="s" class="text-gray-800">{{ s }}</option>
+
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut Koperasi?</label>
+                                    <select v-model="anggota.ikut_koperasi" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    <div v-if="anggota.ikut_koperasi === '1'" class="mt-3 pt-3 border-t border-gray-200">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Koperasi</label>
+                                        <input v-model="anggota.jenis_koperasi" type="text" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label :class="labelCls">Status Perkawinan</label>
-                                <div class="relative">
-                                    <select v-model="anggota.status_perkawinan" :class="selectCls">
-                                        <option value="" class="text-gray-400">-- Pilih --</option>
-                                        <option v-for="sk in statusKawinOptions" :key="sk" :value="sk" class="text-gray-800">{{ sk }}</option>
+
+                                <!-- Boolean fields only -->
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Bina Keluarga Balita?</label>
+                                    <select v-model="anggota.ikut_bina_keluarga_balita" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Memiliki Tabungan?</label>
+                                    <select v-model="anggota.memiliki_tabungan" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
+                                    </select>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors md:col-span-2">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut PAUD Sejenis?</label>
+                                    <select v-model="anggota.ikut_paud_sejenis" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
+                                        <option value="0">Tidak</option>
+                                        <option value="1">Ya</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Footer Step 2 -->
-                    <div class="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-sm ring-1 ring-gray-100">
-                        <button type="submit" :disabled="form.processing"
-                            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60 active:scale-95">
-                            <svg v-if="!form.processing" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            {{ form.processing ? 'Menyimpan...' : 'Simpan & Kirim Verifikasi' }}
-                        </button>
-                        <button type="button" @click="step = 1"
-                            class="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 active:scale-95">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                            Kembali
-                        </button>
-                    </div>
+                <!-- FORM FOOTER (Navigation Buttons) -->
+                <div class="bg-gray-50 border-t border-gray-100 p-6 flex items-center justify-between">
+                    <button v-if="step > 1" type="button" @click="prevStep" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-100 transition-colors shadow-sm">
+                        <i class="fa-solid fa-arrow-left"></i> Sebelumnya
+                    </button>
+                    <div v-else></div>
+                    
+                    <button v-if="step < 3" type="button" @click="nextStep" class="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-md">
+                        Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    
+                    <button v-if="step === 3" type="submit" :disabled="form.processing" class="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md transform hover:scale-[1.02] disabled:opacity-75 disabled:scale-100">
+                        <i v-if="!form.processing" class="fa-solid fa-floppy-disk"></i>
+                        <span v-if="form.processing" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        {{ form.processing ? 'Menyimpan...' : 'Simpan Data KK' }}
+                    </button>
                 </div>
             </form>
         </div>
