@@ -69,6 +69,18 @@ const form = useForm({
     jumlah_ibu_hamil: 0,
     jumlah_ibu_menyusui: 0,
     jumlah_lansia: 0,
+    jumlah_berkebutuhan_khusus: 0,
+    sehat_layak_huni: false,
+    memiliki_tempat_sampah: false,
+    memiliki_spal: false,
+    memiliki_jamban: false,
+    menempel_stiker_p4k: false,
+    sumber_air: '',
+    makanan_pokok: '',
+    ikut_up2k: false,
+    ikut_pekarangan: false,
+    ikut_industri: false,
+    ikut_kerja_bakti: false,
     
     anggota: [anggotaTemplate()],
 });
@@ -345,6 +357,82 @@ const progressWidth = () => {
                             <i class="fa-solid fa-person-cane text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
                             <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Lansia</label>
                             <input v-model="form.jumlah_lansia" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-wheelchair text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Berkebutuhan Khusus</label>
+                            <input v-model="form.jumlah_berkebutuhan_khusus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                    </div>
+
+                    <!-- Kriteria Rumah -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.sehat_layak_huni" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Sehat / Layak Huni</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.memiliki_tempat_sampah" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Memiliki Tempat Sampah</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.memiliki_spal" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Memiliki SPAL</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.memiliki_jamban" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Memiliki Jamban Keluarga</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.menempel_stiker_p4k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Menempel Stiker P4K/PMI/PMK</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sumber Air & Makanan -->
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Sumber Air Keluarga</h4>
+                            <select v-model="form.sumber_air" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                <option value="">- Pilih Sumber Air -</option>
+                                <option value="PDAM">PDAM</option>
+                                <option value="Sumur">Sumur</option>
+                                <option value="Lainnya">DLL (Lainnya)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Makanan Pokok</h4>
+                            <select v-model="form.makanan_pokok" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                <option value="">- Pilih Makanan Pokok -</option>
+                                <option value="Beras">Beras</option>
+                                <option value="Non Beras">Non-Beras</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Kegiatan Warga -->
+                    <div class="mt-8">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kegiatan Warga</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.ikut_up2k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">UP2K</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.ikut_pekarangan" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Pemanfaatan Tanah Pekarangan</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.ikut_industri" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Industri Rumah Tangga</label>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
+                                <input v-model="form.ikut_kerja_bakti" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                <label class="text-sm font-medium text-gray-700">Kerja Bakti</label>
+                            </div>
                         </div>
                     </div>
                 </div>

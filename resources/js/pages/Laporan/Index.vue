@@ -247,8 +247,8 @@ const totals = computed(() => {
                             <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BUTA</th>
                             <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BERKEBUTUHAN<br>KHUSUS</th>
                             <th colspan="6" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KRITERIA RUMAH</th>
-                            <th colspan="3" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SUMBER AIR</th>
-                            <th colspan="2" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">MAKANAN</th>
+                            <th colspan="3" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SUMBER AIR KELUARGA</th>
+                            <th colspan="2" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">MAKANAN POKOK</th>
                             <th colspan="4" class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KEGIATAN WARGA</th>
                             <th rowspan="2" class="px-2 py-2 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KET</th>
                         </tr>
@@ -267,14 +267,14 @@ const totals = computed(() => {
                             
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">PDAM</th>
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">SUMUR</th>
-                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">DR</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">DLL</th>
                             
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">BERAS</th>
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">NON<br>BERAS</th>
                             
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">UP2K</th>
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">MNFT<br>TANAH</th>
-                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">IND.<br>RT</th>
+                            <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">INDUSTRI<br>RUMAH TANGGA</th>
                             <th class="px-2 py-1 text-center text-[10px] print:text-[6px] font-bold uppercase text-gray-600 print:text-black border border-gray-200 print:border-gray-800">KERJA<br>BAKTI</th>
                         </tr>
                     </thead>

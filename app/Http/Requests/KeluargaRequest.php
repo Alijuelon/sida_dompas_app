@@ -42,6 +42,18 @@ class KeluargaRequest extends FormRequest
             'jumlah_ibu_hamil'      => ['nullable', 'integer', 'min:0'],
             'jumlah_ibu_menyusui'   => ['nullable', 'integer', 'min:0'],
             'jumlah_lansia'         => ['nullable', 'integer', 'min:0'],
+            'jumlah_berkebutuhan_khusus' => ['nullable', 'integer', 'min:0'],
+            'sehat_layak_huni'      => ['nullable', 'boolean'],
+            'memiliki_tempat_sampah'=> ['nullable', 'boolean'],
+            'memiliki_spal'         => ['nullable', 'boolean'],
+            'memiliki_jamban'       => ['nullable', 'boolean'],
+            'menempel_stiker_p4k'   => ['nullable', 'boolean'],
+            'sumber_air'            => ['nullable', 'string', 'max:255'],
+            'makanan_pokok'         => ['nullable', 'string', 'max:255'],
+            'ikut_up2k'             => ['nullable', 'boolean'],
+            'ikut_pekarangan'       => ['nullable', 'boolean'],
+            'ikut_industri'         => ['nullable', 'boolean'],
+            'ikut_kerja_bakti'      => ['nullable', 'boolean'],
         ];
     }
 

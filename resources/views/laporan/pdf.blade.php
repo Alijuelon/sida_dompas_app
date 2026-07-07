@@ -54,8 +54,8 @@
                 <th rowspan="2">BUTA</th>
                 <th rowspan="2">BERKEBUTUHAN<br>KHUSUS</th>
                 <th colspan="6">KRITERIA RUMAH</th>
-                <th colspan="3">SUMBER AIR</th>
-                <th colspan="2">MAKANAN</th>
+                <th colspan="3">SUMBER AIR KELUARGA</th>
+                <th colspan="2">MAKANAN POKOK</th>
                 <th colspan="4">KEGIATAN WARGA</th>
                 <th rowspan="2">KET</th>
             </tr>
@@ -73,15 +73,15 @@
                 <th>TEMPEL<br>STIKER<br>PMI</th>
                 <!-- Air -->
                 <th>PDAM</th>
-                <th>SUMUR<br>DLL</th>
-                <th>DR</th>
+                <th>SUMUR</th>
+                <th>DLL</th>
                 <!-- Makanan -->
                 <th>BERAS</th>
                 <th>NON<br>BERAS</th>
                 <!-- Kegiatan -->
                 <th>UP2K</th>
                 <th>MANFAAT<br>TANAH</th>
-                <th>IND.<br>RT</th>
+                <th>INDUSTRI<br>RUMAH TANGGA</th>
                 <th>KERJA<br>BAKTI</th>
             </tr>
         </thead>
