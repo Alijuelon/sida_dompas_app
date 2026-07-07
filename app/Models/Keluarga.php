@@ -19,7 +19,7 @@ class Keluarga extends Model
         'jumlah_ibu_hamil', 'jumlah_ibu_menyusui', 'jumlah_lansia',
         'jumlah_laki_laki', 'jumlah_perempuan', 'jumlah_balita_laki', 'jumlah_balita_perempuan',
         'jumlah_berkebutuhan_khusus', 'sehat_layak_huni', 'memiliki_tempat_sampah',
-        'memiliki_spal', 'menempel_stiker_p4k', 'sumber_air', 'makanan_pokok',
+        'memiliki_spal', 'memiliki_jamban', 'menempel_stiker_p4k', 'sumber_air', 'makanan_pokok',
         'ikut_up2k', 'ikut_pekarangan', 'ikut_industri', 'ikut_kerja_bakti'
     ];
 

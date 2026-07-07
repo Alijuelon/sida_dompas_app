@@ -66,14 +66,6 @@ class DatabaseSeeder extends Seeder
                 'wilayah' => 'RT 01 / RW 01',
                 'no_hp' => '081234567890',
                 'rt' => '01'
-            ],
-            [
-                'name' => 'Bpk. Ahmad Fauzi',
-                'username' => 'kader2',
-                'email' => 'kader2@sidadompas.id',
-                'wilayah' => 'RT 02 / RW 01',
-                'no_hp' => '081298765432',
-                'rt' => '02'
             ]
         ];
 
@@ -114,9 +106,9 @@ class DatabaseSeeder extends Seeder
             $kader = $kData['model'];
             $rt = $kData['rt'];
             
-            // Buat 3 Dasawisma per Kader
-            for ($d = 1; $d <= 3; $d++) {
-                $namaDasawisma = 'Dasawisma ' . $faker->colorName() . ' ' . $d;
+            // Buat 1 Dasawisma per Kader
+            for ($d = 1; $d <= 1; $d++) {
+                $namaDasawisma = 'Dasawisma Mawar 1';
                 $dasawisma = Dasawisma::firstOrCreate(
                     ['nama_dasawisma' => $namaDasawisma, 'kader_id' => $kader->id],
                     [
@@ -130,7 +122,7 @@ class DatabaseSeeder extends Seeder
                 for ($k = 1; $k <= 10; $k++) {
                     $kepalaKeluargaName = $faker->name('male');
                     $noKk = $faker->numerify('140801##########'); // Format Riau, Bengkalis
-                    $jumlahAnggota = $faker->numberBetween(2, 6);
+                    $jumlahAnggota = $faker->numberBetween(3, 5);
                     
                     $keluarga = Keluarga::create([
                         'dasawisma_id'         => $dasawisma->id,
@@ -153,6 +145,18 @@ class DatabaseSeeder extends Seeder
                         'jumlah_ibu_hamil'     => $faker->numberBetween(0, 1),
                         'jumlah_ibu_menyusui'  => $faker->numberBetween(0, 1),
                         'jumlah_lansia'        => $faker->numberBetween(0, 2),
+                        // Kriteria Rumah lengkap
+                        'sehat_layak_huni'           => $faker->boolean(80),
+                        'memiliki_tempat_sampah'     => $faker->boolean(90),
+                        'memiliki_spal'              => $faker->boolean(70),
+                        'memiliki_jamban'            => $faker->boolean(85),
+                        'menempel_stiker_p4k'        => $faker->boolean(60),
+                        'sumber_air'                 => $faker->randomElement(['PDAM', 'Sumur Gali', 'Sumur Pompa', 'Sungai/Mata Air']),
+                        'makanan_pokok'              => $faker->randomElement(['Beras', 'Sagu', 'Jagung', 'Ubi']),
+                        'ikut_up2k'                  => $faker->boolean(50),
+                        'ikut_pekarangan'            => $faker->boolean(60),
+                        'ikut_industri'              => $faker->boolean(30),
+                        'ikut_kerja_bakti'           => $faker->boolean(90),
                     ]);
 
                     // Generate status verifikasi acak
@@ -227,9 +231,14 @@ class DatabaseSeeder extends Seeder
                     // Hitung jumlah laki-laki dan perempuan, update keluarga
                     $jumlahL = $keluarga->anggotaKeluargas()->where('jenis_kelamin', 'L')->count();
                     $jumlahP = $keluarga->anggotaKeluargas()->where('jenis_kelamin', 'P')->count();
+                    $jumlahBalitaL = $keluarga->anggotaKeluargas()->where('jenis_kelamin', 'L')->where('umur', '<=', 5)->count();
+                    $jumlahBalitaP = $keluarga->anggotaKeluargas()->where('jenis_kelamin', 'P')->where('umur', '<=', 5)->count();
+
                     $keluarga->update([
                         'jumlah_laki_laki' => $jumlahL,
                         'jumlah_perempuan' => $jumlahP,
+                        'jumlah_balita_laki' => $jumlahBalitaL,
+                        'jumlah_balita_perempuan' => $jumlahBalitaP,
                     ]);
                 }
             }
