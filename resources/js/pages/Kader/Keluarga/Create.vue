@@ -14,6 +14,7 @@ const anggotaTemplate = () => ({
     nik: '',
     nama_anggota: '',
     status_dalam_keluarga: 'Anggota Keluarga',
+    pekerjaan: '',
     status_perkawinan: 'Lajang',
     jenis_kelamin: 'L',
     agama: 'Islam',
@@ -86,13 +87,13 @@ const form = useForm({
 });
 
 onMounted(() => {
-    form.anggota[0].status_dalam_keluarga = 'Kepala Rumah Tangga';
+    form.anggota[0].status_dalam_keluarga = 'Kepala Keluarga';
 });
 
 function tambahAnggota() {
     const t = anggotaTemplate();
     if (form.anggota.length === 0) {
-        t.status_dalam_keluarga = 'Kepala Rumah Tangga';
+        t.status_dalam_keluarga = 'Kepala Keluarga';
     }
     form.anggota.push(t);
 }
@@ -464,6 +465,7 @@ const progressWidth = () => {
                                 <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">{{ idx + 1 }}</div>
                                 <span :class="['text-sm font-bold uppercase tracking-wide', idx === 0 ? 'text-emerald-700' : 'text-gray-800']">
                                     {{ idx === 0 ? 'Kepala Keluarga (Wajib)' : 'Anggota Keluarga' }}
+                                    <span v-if="idx === 0" class="ml-1 text-[10px] text-gray-400 normal-case tracking-normal font-normal">(Status lebih detail bisa diubah di Detail KK)</span>
                                 </span>
                             </div>
 
@@ -484,7 +486,7 @@ const progressWidth = () => {
 
                                 <div class="relative">
                                     <select v-model="anggota.status_dalam_keluarga" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
-                                        <option value="Kepala Rumah Tangga">Kepala Rumah Tangga</option>
+                                        <option value="Kepala Keluarga">Kepala Keluarga</option>
                                         <option value="Anggota Keluarga">Anggota Keluarga</option>
                                     </select>
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Status Dlm Keluarga <span class="text-red-500">*</span></label>
@@ -549,7 +551,24 @@ const progressWidth = () => {
                                     </select>
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pendidikan Terakhir</label>
                                 </div>
-                                <div class="relative md:col-span-2">
+                                <div class="relative">
+                                    <select v-model="anggota.pekerjaan" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none">
+                                        <option value="">- Pilih -</option>
+                                        <option value="Tidak Bekerja">Tidak Bekerja</option>
+                                        <option value="Petani">Petani</option>
+                                        <option value="Nelayan">Nelayan</option>
+                                        <option value="Pedagang">Pedagang</option>
+                                        <option value="PNS">PNS</option>
+                                        <option value="Swasta">Swasta</option>
+                                        <option value="Wiraswasta">Wiraswasta</option>
+                                        <option value="TNI/Polri">TNI/Polri</option>
+                                        <option value="Pelajar/Mahasiswa">Pelajar/Mahasiswa</option>
+                                        <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
+                                        <option value="Lainnya">Lainnya</option>
+                                    </select>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pekerjaan</label>
+                                </div>
+                                <div class="relative">
                                     <input v-model="anggota.pekerjaan_utama" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Pekerjaan Utama</label>
                                 </div>

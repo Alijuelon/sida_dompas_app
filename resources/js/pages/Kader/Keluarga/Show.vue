@@ -163,7 +163,7 @@ function submitTambahAnggota() {
 const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
 const pendidikanOptions = ['Tidak Sekolah', 'SD', 'SMP', 'SMA/SMK', 'D1/D2/D3', 'S1', 'S2', 'S3'];
 const pekerjaanOptions = ['Tidak Bekerja', 'Petani', 'Nelayan', 'Pedagang', 'PNS', 'Swasta', 'Wiraswasta', 'TNI/Polri', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Lainnya'];
-const statusKKOptions = ['Kepala Keluarga', 'Istri', 'Anak', 'Menantu', 'Cucu', 'Orang Tua', 'Mertua', 'Lainnya'];
+const statusKKOptions = ['Kepala Keluarga', 'Istri', 'Anak', 'Menantu', 'Cucu', 'Orang Tua', 'Mertua', 'Anggota Keluarga', 'Lainnya'];
 const statusKawinOptions = ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'];
 
 function statusBadge(status: string) {
@@ -439,7 +439,7 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                                 </td>
                                 <td class="px-5 py-3.5 text-xs text-gray-500">{{ formatDate(ak.tanggal_lahir) }}</td>
                                 <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.status_dalam_keluarga ?? '-' }}</td>
-                                <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.pekerjaan ?? '-' }}</td>
+                                <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.pekerjaan || ak.pekerjaan_utama || '-' }}</td>
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1.5">
                                         <a :href="`/kader/anggota/${ak.id}/edit`"

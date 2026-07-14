@@ -99,8 +99,13 @@ class DatabaseSeeder extends Seeder
         // ========================
         
         $agamas = ['Islam', 'Kristen Protestan', 'Kristen Katolik', 'Hindu', 'Buddha', 'Konghucu'];
-        $pendidikans = ['Tidak Tamat SD', 'SD/MI', 'SMP', 'SMU/SMK', 'Diploma', 'S1', 'S2', 'S3'];
-        $pekerjaans = ['Petani', 'Nelayan', 'PNS', 'Pegawai Swasta', 'Wiraswasta', 'Ibu Rumah Tangga', 'Pelajar/Mahasiswa', 'Tidak Bekerja'];
+        $pendidikanTerakhirs = ['Tidak Tamat SD', 'SD/MI', 'SMP', 'SMU/SMK', 'Diploma', 'S1', 'S2', 'S3'];
+        $pendidikanUmums = ['Tidak Sekolah', 'SD', 'SMP', 'SMA/SMK', 'D1/D2/D3', 'S1', 'S2', 'S3'];
+        $pekerjaanUtamas = ['Petani', 'Nelayan', 'PNS', 'Pegawai Swasta', 'Wiraswasta', 'Ibu Rumah Tangga', 'Pelajar/Mahasiswa', 'Tidak Bekerja'];
+        $pekerjaanSelects = ['Tidak Bekerja', 'Petani', 'Nelayan', 'Pedagang', 'PNS', 'Swasta', 'Wiraswasta', 'TNI/Polri', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Lainnya'];
+        
+        // Status lengkap untuk anggota ke-3 dst (simulasi ditambah via Detail KK)
+        $statusDetailKK = ['Anak', 'Menantu', 'Cucu', 'Orang Tua', 'Mertua', 'Lainnya'];
         
         foreach ($kaders as $kData) {
             $kader = $kData['model'];
@@ -122,7 +127,7 @@ class DatabaseSeeder extends Seeder
                 for ($k = 1; $k <= 10; $k++) {
                     $kepalaKeluargaName = $faker->name('male');
                     $noKk = $faker->numerify('140801##########'); // Format Riau, Bengkalis
-                    $jumlahAnggota = $faker->numberBetween(3, 5);
+                    $jumlahAnggota = $faker->numberBetween(3, 6);
                     
                     $keluarga = Keluarga::create([
                         'dasawisma_id'         => $dasawisma->id,
@@ -151,8 +156,8 @@ class DatabaseSeeder extends Seeder
                         'memiliki_spal'              => $faker->boolean(70),
                         'memiliki_jamban'            => $faker->boolean(85),
                         'menempel_stiker_p4k'        => $faker->boolean(60),
-                        'sumber_air'                 => $faker->randomElement(['PDAM', 'Sumur Gali', 'Sumur Pompa', 'Sungai/Mata Air']),
-                        'makanan_pokok'              => $faker->randomElement(['Beras', 'Sagu', 'Jagung', 'Ubi']),
+                        'sumber_air'                 => $faker->randomElement(['PDAM', 'Sumur', 'Lainnya']),
+                        'makanan_pokok'              => $faker->randomElement(['Beras', 'Non Beras']),
                         'ikut_up2k'                  => $faker->boolean(50),
                         'ikut_pekarangan'            => $faker->boolean(60),
                         'ikut_industri'              => $faker->boolean(30),
@@ -174,17 +179,49 @@ class DatabaseSeeder extends Seeder
                     // Generate Anggota Keluarga
                     for ($a = 1; $a <= $jumlahAnggota; $a++) {
                         $isKK = ($a === 1);
-                        $gender = $isKK ? 'L' : ($a === 2 ? 'P' : $faker->randomElement(['L', 'P']));
+                        $isIstri = ($a === 2);
+                        $gender = $isKK ? 'L' : ($isIstri ? 'P' : $faker->randomElement(['L', 'P']));
                         $nama = $isKK ? $kepalaKeluargaName : $faker->name($gender == 'L' ? 'male' : 'female');
-                        $tglLahir = $isKK ? $faker->dateTimeBetween('-60 years', '-25 years') : ($a === 2 ? $faker->dateTimeBetween('-55 years', '-20 years') : $faker->dateTimeBetween('-20 years', '-1 years'));
+                        $tglLahir = $isKK
+                            ? $faker->dateTimeBetween('-60 years', '-25 years')
+                            : ($isIstri
+                                ? $faker->dateTimeBetween('-55 years', '-20 years')
+                                : $faker->dateTimeBetween('-20 years', '-1 years'));
                         
-                        $statusDlmKeluarga = $isKK ? 'Kepala Rumah Tangga' : ($a === 2 ? 'Istri' : 'Anak');
-                        $statusKawin = ($isKK || $a === 2) ? 'Menikah' : 'Lajang';
+                        // Status dalam keluarga:
+                        // - Anggota ke-1: Kepala Keluarga (konsisten dengan Create.vue)
+                        // - Anggota ke-2: Istri (ditambahkan via Detail KK, status detail)
+                        // - Anggota ke-3+: Anak, Menantu, Cucu dll (ditambahkan via Detail KK)
+                        if ($isKK) {
+                            $statusDlmKeluarga = 'Kepala Keluarga';
+                        } elseif ($isIstri) {
+                            $statusDlmKeluarga = 'Istri';
+                        } else {
+                            // Simulasi variasi status yang ditambahkan via Detail KK
+                            $statusDlmKeluarga = $faker->randomElement($statusDetailKK);
+                        }
                         
-                        $akseptorKb = $gender == 'P' && $a == 2 ? $faker->boolean(60) : false;
-                        $aktifPosyandu = $gender == 'P' && $a == 2 ? $faker->boolean(70) : false;
+                        $statusKawin = ($isKK || $isIstri) ? 'Kawin' : ($faker->boolean(20) ? 'Kawin' : 'Belum Kawin');
+                        
+                        // Pekerjaan (select) & pekerjaan utama (text detail)
+                        if ($isKK) {
+                            $pekerjaan = $faker->randomElement(['Petani', 'Nelayan', 'PNS', 'Swasta', 'Wiraswasta', 'Pedagang']);
+                            $pekerjaanUtama = $pekerjaan;
+                        } elseif ($isIstri) {
+                            $pekerjaan = 'Ibu Rumah Tangga';
+                            $pekerjaanUtama = 'Ibu Rumah Tangga';
+                        } else {
+                            $pekerjaan = $faker->randomElement(['Pelajar/Mahasiswa', 'Tidak Bekerja', 'Swasta', 'Wiraswasta']);
+                            $pekerjaanUtama = $pekerjaan === 'Pelajar/Mahasiswa' ? 'Pelajar' : $pekerjaan;
+                        }
+                        
+                        // Pendidikan
+                        $pendidikan = $faker->randomElement($pendidikanUmums);
+                        
+                        $akseptorKb = $gender == 'P' && $isIstri ? $faker->boolean(60) : false;
+                        $aktifPosyandu = $gender == 'P' && $isIstri ? $faker->boolean(70) : false;
                         $ikutBelajar = $faker->boolean(20);
-                        $ikutKoperasi = ($isKK || $a === 2) ? $faker->boolean(40) : false;
+                        $ikutKoperasi = ($isKK || $isIstri) ? $faker->boolean(40) : false;
 
                         AnggotaKeluarga::create([
                             'keluarga_id'              => $keluarga->id,
@@ -195,11 +232,13 @@ class DatabaseSeeder extends Seeder
                             'tanggal_lahir'            => $tglLahir,
                             'tempat_lahir'             => $faker->city(),
                             'umur'                     => Carbon::parse($tglLahir)->age,
-                            'agama'                    => 'Islam', // Mayoritas dummy
+                            'agama'                    => 'Islam',
+                            'pendidikan'               => $pendidikan,
+                            'pekerjaan'                => $pekerjaan,
                             'status_dalam_keluarga'    => $statusDlmKeluarga,
                             'status_perkawinan'        => $statusKawin,
-                            'pendidikan_terakhir'      => $faker->randomElement($pendidikans),
-                            'pekerjaan_utama'          => $isKK ? $faker->randomElement($pekerjaans) : ($a === 2 ? 'Ibu Rumah Tangga' : 'Pelajar'),
+                            'pendidikan_terakhir'      => $faker->randomElement($pendidikanTerakhirs),
+                            'pekerjaan_utama'          => $pekerjaanUtama,
                             'jabatan'                  => $isKK ? 'Anggota' : '',
                             
                             // Data Wilayah Individu (sinkron dengan keluarga/dasawisma)

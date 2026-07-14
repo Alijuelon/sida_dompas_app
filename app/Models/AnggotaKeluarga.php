@@ -18,6 +18,8 @@ class AnggotaKeluarga extends Model
         'jenis_kelamin',
         'tanggal_lahir',
         'agama',
+        'pendidikan',
+        'pekerjaan',
         'status_dalam_keluarga',
         'status_perkawinan',
         'dasa_wisma',
