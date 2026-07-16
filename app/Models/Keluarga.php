@@ -23,6 +23,18 @@ class Keluarga extends Model
         'ikut_up2k', 'ikut_pekarangan', 'ikut_industri', 'ikut_kerja_bakti'
     ];
 
+    protected $casts = [
+        'sehat_layak_huni' => 'boolean',
+        'memiliki_tempat_sampah' => 'boolean',
+        'memiliki_spal' => 'boolean',
+        'memiliki_jamban' => 'boolean',
+        'menempel_stiker_p4k' => 'boolean',
+        'ikut_up2k' => 'boolean',
+        'ikut_pekarangan' => 'boolean',
+        'ikut_industri' => 'boolean',
+        'ikut_kerja_bakti' => 'boolean',
+    ];
+
     public function dasawisma(): BelongsTo
     {
         return $this->belongsTo(Dasawisma::class);

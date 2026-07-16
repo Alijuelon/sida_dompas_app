@@ -304,24 +304,24 @@ const totals = computed(() => {
                                 <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_buta || '-' }}</td>
                                 <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">{{ kk.jumlah_berkebutuhan_khusus || '-' }}</td>
                                 
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.sehat_layak_huni ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ !kk.sehat_layak_huni ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.memiliki_tempat_sampah ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.memiliki_spal ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.memiliki_jamban ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.menempel_stiker_p4k ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.sehat_layak_huni" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="!kk.sehat_layak_huni" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.memiliki_tempat_sampah" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.memiliki_spal" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.memiliki_jamban" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.menempel_stiker_p4k" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.sumber_air === 'PDAM' ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.sumber_air === 'Sumur' ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ (kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai') ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.sumber_air === 'PDAM'" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.sumber_air === 'Sumur'" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="(kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai')" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.makanan_pokok === 'Beras' ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ (kk.makanan_pokok !== 'Beras' && kk.makanan_pokok) ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.makanan_pokok === 'Beras'" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="(kk.makanan_pokok !== 'Beras' && kk.makanan_pokok)" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_up2k ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_pekarangan ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_industri ? '✓' : '-' }}</td>
-                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200">{{ kk.ikut_kerja_bakti ? '✓' : '-' }}</td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.ikut_up2k" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.ikut_pekarangan" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.ikut_industri" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-2 py-2 text-center text-xs font-bold text-gray-600 border border-gray-200"><i v-if="kk.ikut_kerja_bakti" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 <td class="px-2 py-2 text-center text-xs text-gray-600 border border-gray-200">-</td>
                             </tr>
                         </template>
@@ -347,24 +347,24 @@ const totals = computed(() => {
                                 <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_buta || '-' }}</td>
                                 <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">{{ kk.jumlah_berkebutuhan_khusus || '-' }}</td>
                                 
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.sehat_layak_huni ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ !kk.sehat_layak_huni ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.memiliki_tempat_sampah ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.memiliki_spal ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.memiliki_jamban ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.menempel_stiker_p4k ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.sehat_layak_huni" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="!kk.sehat_layak_huni" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.memiliki_tempat_sampah" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.memiliki_spal" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.memiliki_jamban" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.menempel_stiker_p4k" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.sumber_air === 'PDAM' ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.sumber_air === 'Sumur' ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ (kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai') ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.sumber_air === 'PDAM'" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.sumber_air === 'Sumur'" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="(kk.sumber_air === 'Lainnya' || kk.sumber_air === 'Sungai')" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.makanan_pokok === 'Beras' ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ (kk.makanan_pokok !== 'Beras' && kk.makanan_pokok) ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.makanan_pokok === 'Beras'" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="(kk.makanan_pokok !== 'Beras' && kk.makanan_pokok)" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_up2k ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_pekarangan ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_industri ? '✓' : '-' }}</td>
-                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800">{{ kk.ikut_kerja_bakti ? '✓' : '-' }}</td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.ikut_up2k" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.ikut_pekarangan" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.ikut_industri" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
+                                <td class="px-1 py-1 text-center text-[7px] font-bold text-black border border-gray-800"><i v-if="kk.ikut_kerja_bakti" class="fa-solid fa-check text-green-600"></i><span v-else>-</span></td>
                                 <td class="px-1 py-1 text-center text-[7px] text-black border border-gray-800">-</td>
                             </tr>
                         </template>

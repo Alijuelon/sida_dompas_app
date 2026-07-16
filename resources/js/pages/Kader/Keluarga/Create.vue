@@ -63,7 +63,8 @@ const form = useForm({
     jumlah_kk: 1,
     jumlah_laki_laki: 0,
     jumlah_perempuan: 0,
-    jumlah_balita: 0,
+    jumlah_balita_laki: 0,
+    jumlah_balita_perempuan: 0,
     jumlah_pus: 0,
     jumlah_wus: 0,
     jumlah_buta: 0,
@@ -326,8 +327,13 @@ const progressWidth = () => {
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita</label>
-                            <input v-model="form.jumlah_balita" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Laki-laki</label>
+                            <input v-model="form.jumlah_balita_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Perempuan</label>
+                            <input v-model="form.jumlah_balita_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
@@ -487,7 +493,14 @@ const progressWidth = () => {
                                 <div class="relative">
                                     <select v-model="anggota.status_dalam_keluarga" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
                                         <option value="Kepala Keluarga">Kepala Keluarga</option>
+                                        <option value="Istri">Istri</option>
+                                        <option value="Anak">Anak</option>
+                                        <option value="Menantu">Menantu</option>
+                                        <option value="Cucu">Cucu</option>
+                                        <option value="Orang Tua">Orang Tua</option>
+                                        <option value="Mertua">Mertua</option>
                                         <option value="Anggota Keluarga">Anggota Keluarga</option>
+                                        <option value="Lainnya">Lainnya</option>
                                     </select>
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Status Dlm Keluarga <span class="text-red-500">*</span></label>
                                 </div>

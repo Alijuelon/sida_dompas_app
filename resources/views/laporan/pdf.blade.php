@@ -8,7 +8,7 @@
             size: legal landscape;
             margin: 10mm;
         }
-        body { font-family: sans-serif; font-size: 8px; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 8px; }
         .header { text-align: center; margin-bottom: 10px; }
         .header h1 { margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase; }
         
@@ -160,24 +160,24 @@
                     <td>{{ $kk->jumlah_buta ?: '-' }}</td>
                     <td>{{ $kk->jumlah_berkebutuhan_khusus ?: '-' }}</td>
                     
-                    <td>{{ $is_sehat ? '✓' : '-' }}</td>
-                    <td>{{ $is_tdksehat ? '✓' : '-' }}</td>
-                    <td>{{ $has_sampah ? '✓' : '-' }}</td>
-                    <td>{{ $has_spal ? '✓' : '-' }}</td>
-                    <td>{{ $has_jamban ? '✓' : '-' }}</td>
-                    <td>{{ $has_pmi ? '✓' : '-' }}</td>
+                    <td>{!! $is_sehat ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $is_tdksehat ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $has_sampah ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $has_spal ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $has_jamban ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $has_pmi ? '&#10003;' : '-' !!}</td>
                     
-                    <td>{{ $is_pdam ? '✓' : '-' }}</td>
-                    <td>{{ $is_sumur ? '✓' : '-' }}</td>
-                    <td>{{ $is_dr ? '✓' : '-' }}</td>
+                    <td>{!! $is_pdam ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $is_sumur ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $is_dr ? '&#10003;' : '-' !!}</td>
                     
-                    <td>{{ $is_beras ? '✓' : '-' }}</td>
-                    <td>{{ $is_nonberas ? '✓' : '-' }}</td>
+                    <td>{!! $is_beras ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $is_nonberas ? '&#10003;' : '-' !!}</td>
                     
-                    <td>{{ $kk->ikut_up2k ? '✓' : '-' }}</td>
-                    <td>{{ $kk->ikut_pekarangan ? '✓' : '-' }}</td>
-                    <td>{{ $kk->ikut_industri ? '✓' : '-' }}</td>
-                    <td>{{ $kk->ikut_kerja_bakti ? '✓' : '-' }}</td>
+                    <td>{!! $kk->ikut_up2k ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $kk->ikut_pekarangan ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $kk->ikut_industri ? '&#10003;' : '-' !!}</td>
+                    <td>{!! $kk->ikut_kerja_bakti ? '&#10003;' : '-' !!}</td>
                     <td>-</td>
                 </tr>
             @empty

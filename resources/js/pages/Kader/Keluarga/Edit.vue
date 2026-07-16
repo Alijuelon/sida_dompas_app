@@ -24,7 +24,8 @@ const form = useForm({
     jumlah_kk: props.keluarga.jumlah_kk ?? 1,
     jumlah_laki_laki: props.keluarga.jumlah_laki_laki ?? 0,
     jumlah_perempuan: props.keluarga.jumlah_perempuan ?? 0,
-    jumlah_balita: props.keluarga.jumlah_balita ?? 0,
+    jumlah_balita_laki: props.keluarga.jumlah_balita_laki ?? 0,
+    jumlah_balita_perempuan: props.keluarga.jumlah_balita_perempuan ?? 0,
     jumlah_pus: props.keluarga.jumlah_pus ?? 0,
     jumlah_wus: props.keluarga.jumlah_wus ?? 0,
     jumlah_buta: props.keluarga.jumlah_buta ?? 0,
@@ -252,8 +253,13 @@ const progressWidth = () => {
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita</label>
-                            <input v-model="form.jumlah_balita" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Laki-laki</label>
+                            <input v-model="form.jumlah_balita_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Perempuan</label>
+                            <input v-model="form.jumlah_balita_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
