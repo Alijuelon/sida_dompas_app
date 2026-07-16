@@ -8,7 +8,8 @@ const props = defineProps<{
     stats: {
         total_kk: number;
         total_warga: number;
-        balita: number;
+        balita_laki: number;
+        balita_perempuan: number;
         lansia: number;
         laki_laki: number;
         perempuan: number;
@@ -162,7 +163,7 @@ const totals = computed(() => {
         </div>
 
         <!-- Statistik Cards -->
-        <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6 print:hidden">
+        <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-7 print:hidden">
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <p class="text-3xl font-bold text-blue-600">{{ stats.total_kk }}</p>
                 <p class="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wide">Total KK</p>
@@ -172,8 +173,12 @@ const totals = computed(() => {
                 <p class="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wide">Total Warga</p>
             </div>
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <p class="text-3xl font-bold text-yellow-600">{{ stats.balita }}</p>
-                <p class="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wide">Balita (<5 th)</p>
+                <p class="text-3xl font-bold text-sky-600">{{ stats.balita_laki }}</p>
+                <p class="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wide">Balita Laki-laki</p>
+            </div>
+            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <p class="text-3xl font-bold text-pink-600">{{ stats.balita_perempuan }}</p>
+                <p class="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wide">Balita Perempuan</p>
             </div>
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <p class="text-3xl font-bold text-purple-600">{{ stats.lansia }}</p>

@@ -40,8 +40,14 @@ class LaporanController extends Controller
         $limaTahunLalu = \Carbon\Carbon::now()->subYears(5)->format('Y-m-d');
         $enamPuluhTahunLalu = \Carbon\Carbon::now()->subYears(60)->format('Y-m-d');
 
-        $balita = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
+        $balitaLaki = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
             ->whereDate('tanggal_lahir', '>', $limaTahunLalu)
+            ->where('jenis_kelamin', 'L')
+            ->count();
+
+        $balitaPerempuan = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
+            ->whereDate('tanggal_lahir', '>', $limaTahunLalu)
+            ->where('jenis_kelamin', 'P')
             ->count();
 
         $lansia = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
@@ -61,12 +67,13 @@ class LaporanController extends Controller
         return Inertia::render('Laporan/Index', [
             'keluargas'  => $keluargas,
             'stats'      => [
-                'total_kk'    => $approvedIds->count(),
-                'total_warga' => $totalWarga,
-                'balita'      => $balita,
-                'lansia'      => $lansia,
-                'laki_laki'   => $lakiLaki,
-                'perempuan'   => $perempuan,
+                'total_kk'        => $approvedIds->count(),
+                'total_warga'     => $totalWarga,
+                'balita_laki'     => $balitaLaki,
+                'balita_perempuan'=> $balitaPerempuan,
+                'lansia'          => $lansia,
+                'laki_laki'       => $lakiLaki,
+                'perempuan'       => $perempuan,
             ],
             'dasawismas'    => $dasawismas,
             'rt_list'       => $rtList,
@@ -101,8 +108,14 @@ class LaporanController extends Controller
         $limaTahunLalu = \Carbon\Carbon::now()->subYears(5)->format('Y-m-d');
         $enamPuluhTahunLalu = \Carbon\Carbon::now()->subYears(60)->format('Y-m-d');
 
-        $balita = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
+        $balitaLaki = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
             ->whereDate('tanggal_lahir', '>', $limaTahunLalu)
+            ->where('jenis_kelamin', 'L')
+            ->count();
+
+        $balitaPerempuan = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
+            ->whereDate('tanggal_lahir', '>', $limaTahunLalu)
+            ->where('jenis_kelamin', 'P')
             ->count();
 
         $lansia = AnggotaKeluarga::whereIn('keluarga_id', $approvedIds)
@@ -116,12 +129,13 @@ class LaporanController extends Controller
             ->where('jenis_kelamin', 'P')->count();
 
         $stats = [
-            'total_kk'    => $approvedIds->count(),
-            'total_warga' => $totalWarga,
-            'balita'      => $balita,
-            'lansia'      => $lansia,
-            'laki_laki'   => $lakiLaki,
-            'perempuan'   => $perempuan,
+            'total_kk'        => $approvedIds->count(),
+            'total_warga'     => $totalWarga,
+            'balita_laki'     => $balitaLaki,
+            'balita_perempuan'=> $balitaPerempuan,
+            'lansia'          => $lansia,
+            'laki_laki'       => $lakiLaki,
+            'perempuan'       => $perempuan,
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('laporan.pdf', compact('keluargas', 'stats'));

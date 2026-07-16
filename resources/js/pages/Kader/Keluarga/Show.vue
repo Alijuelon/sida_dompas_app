@@ -291,9 +291,13 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         <p class="text-[10px] text-pink-500 uppercase font-bold">Perempuan</p>
                         <p class="text-lg font-black text-pink-700">{{ keluarga.jumlah_perempuan ?? 0 }}</p>
                     </div>
-                    <div class="rounded-xl bg-orange-50 p-3 text-center">
-                        <p class="text-[10px] text-orange-500 uppercase font-bold">Balita</p>
-                        <p class="text-lg font-black text-orange-700">{{ keluarga.jumlah_balita ?? 0 }}</p>
+                    <div class="rounded-xl bg-sky-50 p-3 text-center">
+                        <p class="text-[10px] text-sky-500 uppercase font-bold">Balita Laki-laki</p>
+                        <p class="text-lg font-black text-sky-700">{{ keluarga.jumlah_balita_laki ?? 0 }}</p>
+                    </div>
+                    <div class="rounded-xl bg-pink-50 p-3 text-center">
+                        <p class="text-[10px] text-pink-500 uppercase font-bold">Balita Perempuan</p>
+                        <p class="text-lg font-black text-pink-700">{{ keluarga.jumlah_balita_perempuan ?? 0 }}</p>
                     </div>
                     <div class="rounded-xl bg-purple-50 p-3 text-center">
                         <p class="text-[10px] text-purple-500 uppercase font-bold">PUS</p>

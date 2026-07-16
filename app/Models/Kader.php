@@ -11,7 +11,7 @@ class Kader extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'nama_kader', 'wilayah', 'no_hp'];
+    protected $fillable = ['user_id', 'nama_kader', 'wilayah', 'rt', 'rw', 'no_hp'];
 
     public function user(): BelongsTo
     {

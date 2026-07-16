@@ -152,7 +152,14 @@ function submitEdit() {
                                 {{ user.role }}
                             </span>
                         </td>
-                        <td class="px-5 py-3.5 text-gray-500 text-xs">{{ user.kader?.wilayah ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-gray-500 text-xs">
+                            <template v-if="user.kader?.wilayah || user.kader?.rt || user.kader?.rw">
+                                <span v-if="user.kader?.wilayah" class="font-medium text-gray-700">{{ user.kader.wilayah }}</span>
+                                <span v-if="user.kader?.wilayah && (user.kader?.rt || user.kader?.rw)"> - </span>
+                                <span v-if="user.kader?.rt || user.kader?.rw">RT {{ user.kader?.rt || '-' }} / RW {{ user.kader?.rw || '-' }}</span>
+                            </template>
+                            <span v-else>-</span>
+                        </td>
                         <td class="px-5 py-3.5 text-center">
                             <button @click="toggleStatus(user.id)" class="rounded-full px-3 py-1 text-xs font-medium transition" :class="user.status ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'">
                                 {{ user.status ? 'Aktif' : 'Nonaktif' }}
