@@ -72,15 +72,9 @@ function downloadPdf() {
     const url = new URL(window.location.href);
     url.pathname = url.pathname.replace(/\/$/, '') + '/download-pdf';
     
-    // Create an anchor element to trigger download instead of window.open
-    // This prevents the browser from blocking it as a popup
-    const link = document.createElement('a');
-    link.href = url.toString();
-    link.target = '_blank';
-    link.download = 'laporan-rekap.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Gunakan window.location.href agar jika terjadi error (seperti session expired),
+    // browser akan menampilkannya dengan jelas, dan jika sukses akan langsung terdownload.
+    window.location.href = url.toString();
 }
 
 function printReport() {

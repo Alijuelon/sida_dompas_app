@@ -117,9 +117,11 @@ class DatabaseSeeder extends Seeder
                 $dasawisma = Dasawisma::firstOrCreate(
                     ['nama_dasawisma' => $namaDasawisma, 'kader_id' => $kader->id],
                     [
-                        'rt'   => $rt,
-                        'rw'   => '01',
-                        'desa' => 'Desa Dompas',
+                        'rt'       => $rt,
+                        'rw'       => '01',
+                        'dusun'    => 'Dusun Utama',
+                        'kategori' => $faker->randomElement(['Murni', 'Lestari']),
+                        'desa'     => 'Desa Dompas',
                     ]
                 );
 
@@ -136,7 +138,7 @@ class DatabaseSeeder extends Seeder
                         'jumlah_anggota'       => $jumlahAnggota,
                         'rt'                   => $rt,
                         'rw'                   => '01',
-                        'dusun_lingkungan'     => $faker->randomElement(['Murni', 'Lestari']),
+                        'dusun_lingkungan'     => 'Dusun Utama',
                         'desa'                 => 'Dompas',
                         'kecamatan'            => 'Bukit Batu',
                         'kabupaten'            => 'Bengkalis',
@@ -193,7 +195,7 @@ class DatabaseSeeder extends Seeder
                         // - Anggota ke-2: Istri (ditambahkan via Detail KK, status detail)
                         // - Anggota ke-3+: Anak, Menantu, Cucu dll (ditambahkan via Detail KK)
                         if ($isKK) {
-                            $statusDlmKeluarga = 'Kepala Keluarga';
+                            $statusDlmKeluarga = 'Kepala Rumah Tangga';
                         } elseif ($isIstri) {
                             $statusDlmKeluarga = 'Istri';
                         } else {
