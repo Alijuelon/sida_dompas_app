@@ -88,13 +88,13 @@ const form = useForm({
 });
 
 onMounted(() => {
-    form.anggota[0].status_dalam_keluarga = 'Kepala Keluarga';
+    form.anggota[0].status_dalam_keluarga = 'Kepala Rumah Tangga';
 });
 
 function tambahAnggota() {
     const t = anggotaTemplate();
     if (form.anggota.length === 0) {
-        t.status_dalam_keluarga = 'Kepala Keluarga';
+        t.status_dalam_keluarga = 'Kepala Rumah Tangga';
     }
     form.anggota.push(t);
 }
@@ -115,7 +115,7 @@ function hapusAnggota(idx: number) {
     if (form.anggota.length > 1) {
         form.anggota.splice(idx, 1);
     } else {
-        showErrorToast('Minimal harus ada 1 anggota (Kepala Keluarga)!');
+        showErrorToast('Minimal harus ada 1 anggota (Kepala Rumah Tangga)!');
     }
 }
 
@@ -127,7 +127,7 @@ function nextStep() {
         if (!form.no_kk) { form.setError('no_kk', 'Nomor KK wajib diisi.'); hasError = true; }
         else if (form.no_kk.length !== 16) { form.setError('no_kk', 'Nomor KK harus tepat 16 digit.'); hasError = true; }
         
-        if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Keluarga wajib diisi.'); hasError = true; }
+        if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Rumah Tangga wajib diisi.'); hasError = true; }
         if (!form.dasawisma_id) { form.setError('dasawisma_id', 'Dasawisma wajib dipilih.'); hasError = true; }
         
         if (hasError) {
@@ -470,7 +470,7 @@ const progressWidth = () => {
                             <div class="flex items-center mb-6 pb-4 border-b border-gray-100 gap-3">
                                 <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">{{ idx + 1 }}</div>
                                 <span :class="['text-sm font-bold uppercase tracking-wide', idx === 0 ? 'text-emerald-700' : 'text-gray-800']">
-                                    {{ idx === 0 ? 'Kepala Keluarga (Wajib)' : 'Anggota Keluarga' }}
+                                    {{ idx === 0 ? 'Kepala Rumah Tangga (Wajib)' : 'Anggota Keluarga' }}
                                     <span v-if="idx === 0" class="ml-1 text-[10px] text-gray-400 normal-case tracking-normal font-normal">(Status lebih detail bisa diubah di Detail KK)</span>
                                 </span>
                             </div>
@@ -492,7 +492,7 @@ const progressWidth = () => {
 
                                 <div class="relative">
                                     <select v-model="anggota.status_dalam_keluarga" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
-                                        <option value="Kepala Keluarga">Kepala Keluarga</option>
+                                        <option value="Kepala Rumah Tangga">Kepala Rumah Tangga</option>
                                         <option value="Istri">Istri</option>
                                         <option value="Anak">Anak</option>
                                         <option value="Menantu">Menantu</option>
@@ -686,7 +686,7 @@ const progressWidth = () => {
 
                                 <!-- Boolean fields only -->
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Bina Keluarga Balita?</label>
+                                    <label class="mb-1.5 block text-xs font-semibold text-gray-600">Nama Kepala Rumah Tangga <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.ikut_bina_keluarga_balita" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>

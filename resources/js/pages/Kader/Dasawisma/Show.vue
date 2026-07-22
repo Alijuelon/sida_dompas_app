@@ -7,9 +7,11 @@ const props = defineProps<{
     dasawisma: {
         id: number;
         nama_dasawisma: string;
+        dusun?: string;
         rt: string;
         rw: string;
         desa: string;
+        kategori?: string;
         kader?: { user?: { name: string } };
     };
     keluargas: {
@@ -91,8 +93,9 @@ function getKeluargaUrl(id: number) {
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Wilayah</p>
-                            <p class="mt-1 text-sm font-semibold text-gray-700">RT {{ dasawisma.rt }} / RW {{ dasawisma.rw }}</p>
+                            <p class="mt-1 text-sm font-semibold text-gray-700">Dusun {{ dasawisma.dusun || '-' }} · RT {{ dasawisma.rt }} / RW {{ dasawisma.rw }}</p>
                             <p class="text-xs text-gray-500">Desa {{ dasawisma.desa }}</p>
+                            <p v-if="dasawisma.kategori" class="mt-1"><span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Kategori: {{ dasawisma.kategori }}</span></p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Kader Penanggung Jawab</p>

@@ -44,7 +44,7 @@ function doDelete() {
 
 // Create Modal (Admin only)
 const showCreate = ref(false);
-const createForm = useForm({ kader_id: '', nama_dasawisma: '', rt: '', rw: '', desa: 'Dompas', kecamatan: '', kabupaten: '' });
+const createForm = useForm({ kader_id: '', nama_dasawisma: '', dusun: '', rt: '', rw: '', desa: 'Dompas', kategori: '' });
 function submitCreate() {
     const prefix = isAdmin.value ? '/admin' : '/kader';
     createForm.post(`${prefix}/dasawisma`, { onSuccess: () => { showCreate.value = false; createForm.reset(); }, preserveScroll: true });
@@ -53,16 +53,16 @@ function submitCreate() {
 // Edit Modal (Admin only)
 const showEdit = ref(false);
 const editId = ref<number | null>(null);
-const editForm = useForm({ kader_id: '', nama_dasawisma: '', rt: '', rw: '', desa: '', kecamatan: '', kabupaten: '' });
+const editForm = useForm({ kader_id: '', nama_dasawisma: '', dusun: '', rt: '', rw: '', desa: '', kategori: '' });
 function openEdit(ds: any) {
     editId.value = ds.id;
     editForm.kader_id = ds.kader_id || '';
     editForm.nama_dasawisma = ds.nama_dasawisma;
     editForm.rt = ds.rt;
     editForm.rw = ds.rw;
+    editForm.dusun = ds.dusun || '';
     editForm.desa = ds.desa;
-    editForm.kecamatan = ds.kecamatan;
-    editForm.kabupaten = ds.kabupaten;
+    editForm.kategori = ds.kategori || '';
     showEdit.value = true;
 }
 function submitEdit() {
@@ -126,7 +126,10 @@ function getDasawismaUrl(id: number) {
 
                 <!-- Dasawisma Info -->
                 <h3 class="text-base font-semibold text-gray-800">{{ ds.nama_dasawisma }}</h3>
-                <p class="text-xs text-gray-400 mt-0.5">RT {{ ds.rt }} / RW {{ ds.rw }} · {{ ds.desa }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">Dusun {{ ds.dusun || '-' }} · RT {{ ds.rt }} / RW {{ ds.rw }} · {{ ds.desa }}</p>
+                <div v-if="ds.kategori" class="mt-2">
+                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Kategori: {{ ds.kategori }}</span>
+                </div>
 
                 <!-- Kader Info -->
                 <div v-if="ds.kader?.user?.name" class="mt-2 flex items-center gap-2">
@@ -184,12 +187,20 @@ function getDasawismaUrl(id: number) {
                         <input v-model="createForm.rw" required class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-gray-700">Desa</label>
-                        <input v-model="createForm.desa" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
+                        <label class="mb-1 block text-xs font-medium text-gray-700">Dusun</label>
+                        <input v-model="createForm.dusun" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-gray-700">Kecamatan</label>
-                        <input v-model="createForm.kecamatan" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
+                        <label class="mb-1 block text-xs font-medium text-gray-700">Kategori</label>
+                        <select v-model="createForm.kategori" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none">
+                            <option value="">Pilih Kategori</option>
+                            <option value="Murni">Murni</option>
+                            <option value="Lestari">Lestari</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-gray-700">Desa</label>
+                        <input v-model="createForm.desa" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
@@ -225,12 +236,20 @@ function getDasawismaUrl(id: number) {
                         <input v-model="editForm.rw" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-gray-700">Desa</label>
-                        <input v-model="editForm.desa" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
+                        <label class="mb-1 block text-xs font-medium text-gray-700">Dusun</label>
+                        <input v-model="editForm.dusun" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-medium text-gray-700">Kecamatan</label>
-                        <input v-model="editForm.kecamatan" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
+                        <label class="mb-1 block text-xs font-medium text-gray-700">Kategori</label>
+                        <select v-model="editForm.kategori" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none">
+                            <option value="">Pilih Kategori</option>
+                            <option value="Murni">Murni</option>
+                            <option value="Lestari">Lestari</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-gray-700">Desa</label>
+                        <input v-model="editForm.desa" class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-green-400 focus:outline-none" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">

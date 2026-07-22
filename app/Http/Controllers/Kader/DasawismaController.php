@@ -99,7 +99,9 @@ class DasawismaController extends Controller
             'nama_dasawisma' => 'required|string|max:255',
             'rt' => 'required|string|max:10',
             'rw' => 'required|string|max:10',
+            'dusun' => 'nullable|string|max:255',
             'desa' => 'required|string|max:255',
+            'kategori' => 'nullable|string|max:255',
         ];
 
         $user = auth()->user();
@@ -131,7 +133,9 @@ class DasawismaController extends Controller
             'nama_dasawisma' => 'required|string|max:255',
             'rt' => 'required|string|max:10',
             'rw' => 'required|string|max:10',
+            'dusun' => 'nullable|string|max:255',
             'desa' => 'required|string|max:255',
+            'kategori' => 'nullable|string|max:255',
         ];
 
         if (auth()->user()->isAdmin()) {
