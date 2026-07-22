@@ -39,10 +39,10 @@ defineProps<{
                 </div>
                 <h1
                     class="bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent">
-                    SIDA Dompas
+                    Aplikasi TP-PKK
                 </h1>
-                <p class="mt-1.5 text-[0.8rem] font-bold tracking-[0.15em] text-emerald-600/90 uppercase">
-                    Sistem Informasi Dasawisma
+                <p class="mt-1.5 text-[0.8rem] font-bold tracking-[0.15em] text-emerald-600/90 uppercase text-center max-w-sm">
+                    Aplikasi Pendataan Warga TP-PKK Berbasis Website Pada Dasawisma Desa Dompas
                 </p>
             </div>
 
@@ -53,7 +53,7 @@ defineProps<{
             </div>
 
             <p class="mt-10 text-center text-xs font-medium text-slate-400">
-                &copy; {{ new Date().getFullYear() }} SIDA Dompas &mdash; Desa Dompas
+                &copy; {{ new Date().getFullYear() }} TP-PKK &mdash; Desa Dompas
             </p>
         </div>
     </div>

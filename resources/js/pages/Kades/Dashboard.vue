@@ -170,8 +170,8 @@ const rateVerified = computed(() =>
 
                 <!-- Info card -->
                 <div class="m-4 overflow-hidden rounded-xl p-5" style="background: linear-gradient(135deg, #1e1b4b, #4338ca);">
-                    <p class="text-sm font-semibold text-white">SIDA-Dompas</p>
-                    <p class="mt-1.5 text-xs text-indigo-200">Sistem Informasi Dasawisma — Membantu pengelolaan data warga secara digital dan transparan.</p>
+                    <p class="text-sm font-semibold text-white">Aplikasi TP-PKK</p>
+                    <p class="mt-1.5 text-xs text-indigo-200">Aplikasi Pendataan Warga TP-PKK — Membantu pengelolaan data warga secara digital dan transparan.</p>
                     <div class="mt-4 flex items-center gap-1">
                         <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         <p class="text-[11px] text-indigo-300 font-medium">Sistem berjalan normal</p>

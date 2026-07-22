@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Data Warga PKK</title>
+    <title>Edit Anggota Keluarga</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for icons -->
@@ -60,8 +60,8 @@
                     <i class="fa-solid fa-user-pen text-xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">Edit Data Warga PKK</h2>
-                    <p class="text-sm text-slate-500 mt-1">Sistem Informasi Dasawisma (SIDA) Dompas</p>
+                    <h2 class="text-2xl font-bold text-slate-900">Edit Anggota Keluarga</h2>
+                    <p class="text-sm text-slate-500 mt-1">Aplikasi Pendataan Warga TP-PKK Berbasis Website Pada Dasawisma Desa Dompas</p>
                 </div>
             </div>
             <a href="{{ route('kader.keluarga.show', $anggotaKeluarga->keluarga_id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors shadow-sm">
@@ -117,17 +117,19 @@
                     <div class="input-floating">
                         <label>Status Dlm Keluarga <span class="text-red-500">*</span></label>
                         <select name="status_dalam_keluarga" required>
-                            <option value="Kepala Rumah Tangga" {{ old('status_dalam_keluarga', $anggotaKeluarga->status_dalam_keluarga) == 'Kepala Rumah Tangga' ? 'selected' : '' }}>Kepala Rumah Tangga</option>
-                            <option value="Anggota Keluarga" {{ old('status_dalam_keluarga', $anggotaKeluarga->status_dalam_keluarga) == 'Anggota Keluarga' ? 'selected' : '' }}>Anggota Keluarga</option>
+                            <option value="">- Pilih -</option>
+                            @foreach(['Kepala Keluarga', 'Istri', 'Anak', 'Menantu', 'Cucu', 'Orang Tua', 'Mertua', 'Anggota Keluarga', 'Lainnya'] as $s)
+                                <option value="{{ $s }}" {{ old('status_dalam_keluarga', $anggotaKeluarga->status_dalam_keluarga) == $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="input-floating">
                         <label>Status Perkawinan</label>
                         <select name="status_perkawinan">
-                            <option value="Lajang" {{ old('status_perkawinan', $anggotaKeluarga->status_perkawinan) == 'Lajang' ? 'selected' : '' }}>Lajang</option>
-                            <option value="Menikah" {{ old('status_perkawinan', $anggotaKeluarga->status_perkawinan) == 'Menikah' ? 'selected' : '' }}>Menikah</option>
-                            <option value="Janda" {{ old('status_perkawinan', $anggotaKeluarga->status_perkawinan) == 'Janda' ? 'selected' : '' }}>Janda</option>
-                            <option value="Duda" {{ old('status_perkawinan', $anggotaKeluarga->status_perkawinan) == 'Duda' ? 'selected' : '' }}>Duda</option>
+                            <option value="">- Pilih -</option>
+                            @foreach(['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'] as $s)
+                                <option value="{{ $s }}" {{ old('status_perkawinan', $anggotaKeluarga->status_perkawinan) == $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="input-floating">
@@ -140,7 +142,8 @@
                     <div class="input-floating">
                         <label>Agama</label>
                         <select name="agama">
-                            @foreach(['Islam', 'Kristen Protestan', 'Kristen Katolik', 'Hindu', 'Buddha', 'Konghucu'] as $agm)
+                            <option value="">- Pilih -</option>
+                            @foreach(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'] as $agm)
                                 <option value="{{ $agm }}" {{ old('agama', $anggotaKeluarga->agama) == $agm ? 'selected' : '' }}>{{ $agm }}</option>
                             @endforeach
                         </select>
@@ -168,7 +171,7 @@
                         <label>Pendidikan Terakhir</label>
                         <select name="pendidikan_terakhir">
                             <option value="">- Pilih -</option>
-                            @foreach(['Tidak Tamat SD', 'SD/MI', 'SMP', 'SMU/SMK', 'Diploma', 'S1', 'S2', 'S3'] as $pend)
+                            @foreach(['Tidak Sekolah', 'SD', 'SMP', 'SMA/SMK', 'D1/D2/D3', 'S1', 'S2', 'S3'] as $pend)
                                 <option value="{{ $pend }}" {{ old('pendidikan_terakhir', $anggotaKeluarga->pendidikan_terakhir) == $pend ? 'selected' : '' }}>{{ $pend }}</option>
                             @endforeach
                         </select>

@@ -58,7 +58,7 @@
 <!-- SIDEBAR TEMPLATE (Hanya Tampilan/Mockup) -->
 <aside class="w-72 bg-white border-r border-gray-200 hidden md:flex flex-col flex-shrink-0 shadow-sm z-20">
     <div class="h-16 flex items-center px-6 border-b border-gray-100">
-        <div class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">SIDA Dompas</div>
+        <div class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">TP-PKK Dompas</div>
     </div>
     <div class="p-4 flex-1 overflow-y-auto">
         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 mt-2 px-3">Menu Utama</div>

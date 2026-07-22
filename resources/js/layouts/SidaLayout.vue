@@ -189,7 +189,7 @@ const pageTitle = computed(() => {
                         </div>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-xl font-extrabold tracking-tight text-slate-800">SIDA</span>
+                        <span class="text-xl font-extrabold tracking-tight text-slate-800">TP-PKK</span>
                         <span class="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-600">Dompas</span>
                     </div>
                 </Link>

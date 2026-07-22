@@ -68,6 +68,7 @@ function nextStep() {
         
         if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Keluarga wajib diisi.'); hasError = true; }
         if (!form.dasawisma_id) { form.setError('dasawisma_id', 'Dasawisma wajib dipilih.'); hasError = true; }
+        if (!form.dusun_lingkungan) { form.setError('dusun_lingkungan', 'Dusun / Lingkungan wajib dipilih.'); hasError = true; }
         
         if (hasError) {
             showErrorToast('Mohon lengkapi field yang ditandai bintang (*) sebelum melanjutkan.');
@@ -105,7 +106,7 @@ const progressWidth = () => {
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">Edit Data Kartu Keluarga (KK)</h2>
-                    <p class="text-sm text-gray-500 mt-1">Sistem Informasi Dasawisma (SIDA) Dompas</p>
+                    <p class="text-sm text-gray-500 mt-1">Aplikasi Pendataan Warga TP-PKK Berbasis Website Pada Dasawisma Desa Dompas</p>
                 </div>
                 <a :href="`/kader/keluarga/${keluarga.id}`" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-emerald-600 transition-colors shadow-sm">
                     <i class="fa-solid fa-arrow-left"></i> Batal & Kembali
@@ -155,7 +156,7 @@ const progressWidth = () => {
             </div>
 
             <!-- FORM START -->
-            <form @submit.prevent="submit" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <form @submit.prevent="submit" novalidate class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 
                 <!-- ================= STEP 1 ================= -->
                 <div v-show="step === 1" class="p-6 md:p-8 transition-all duration-300">

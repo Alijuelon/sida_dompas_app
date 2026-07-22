@@ -70,7 +70,7 @@ function statusClass(s: string) {
         <!-- Header -->
         <div class="mb-6 animate-fade-in">
             <h1 class="text-2xl font-bold text-gray-800">Dashboard Administrator</h1>
-            <p class="mt-0.5 text-sm text-gray-500">Selamat datang di Sistem Informasi Dasawisma Desa Dompas</p>
+            <p class="mt-0.5 text-sm text-gray-500">Selamat datang di Aplikasi Pendataan Warga TP-PKK Berbasis Website Pada Dasawisma Desa Dompas</p>
         </div>
 
         <!-- Stat Cards -->

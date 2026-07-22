@@ -30,7 +30,7 @@ function submit() {
 
 <template>
     <AuthBase
-        title="SIDA Dompas"
+        title="Aplikasi TP-PKK"
         description="Masukkan username dan password untuk masuk"
     >
         <Head title="Login" />

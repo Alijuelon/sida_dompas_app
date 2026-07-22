@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Kader;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dasawisma;
+use App\Models\Keluarga;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,7 +26,11 @@ class DasawismaController extends Controller
         } else {
             $kader = $this->getKader();
             $dasawismas = $kader
-                ? Dasawisma::where('kader_id', $kader->id)->withCount('keluargas')->latest()->get()
+                ? Dasawisma::where('kader_id', $kader->id)
+                    ->with('kader.user')
+                    ->withCount('keluargas')
+                    ->latest()
+                    ->get()
                 : collect();
             $kaders = [];
         }
@@ -36,13 +41,60 @@ class DasawismaController extends Controller
         ]);
     }
 
+    /**
+     * Menampilkan detail Dasawisma beserta daftar KK.
+     * Kader bisa melihat detail + daftar KK + pencarian.
+     */
+    public function show(Request $request, Dasawisma $dasawisma): Response
+    {
+        $this->authorizeKader($dasawisma);
+
+        $dasawisma->load('kader.user');
+
+        // Query keluargas with search
+        $search = $request->input('search', '');
+        $keluargasQuery = Keluarga::where('dasawisma_id', $dasawisma->id)
+            ->withCount('anggotaKeluargas');
+
+        if ($search) {
+            $keluargasQuery->where(function ($q) use ($search) {
+                $q->where('nama_kepala_keluarga', 'like', "%{$search}%")
+                  ->orWhere('no_kk', 'like', "%{$search}%")
+                  ->orWhere('rt', 'like', "%{$search}%")
+                  ->orWhere('rw', 'like', "%{$search}%");
+            });
+        }
+
+        $keluargas = $keluargasQuery->latest()->paginate(10)->withQueryString();
+
+        // Stats
+        $totalKK = Keluarga::where('dasawisma_id', $dasawisma->id)->count();
+        $totalAnggota = \App\Models\AnggotaKeluarga::whereHas('keluarga', function ($q) use ($dasawisma) {
+            $q->where('dasawisma_id', $dasawisma->id);
+        })->count();
+
+        return Inertia::render('Kader/Dasawisma/Show', [
+            'dasawisma' => $dasawisma,
+            'keluargas' => $keluargas,
+            'filters' => ['search' => $search],
+            'stats' => [
+                'total_kk' => $totalKK,
+                'total_anggota' => $totalAnggota,
+            ],
+        ]);
+    }
+
     public function create(): Response
     {
+        $this->authorizeAdmin();
+
         return Inertia::render('Kader/Dasawisma/Create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorizeAdmin();
+
         $rules = [
             'nama_dasawisma' => 'required|string|max:255',
             'rt' => 'required|string|max:10',
@@ -57,22 +109,14 @@ class DasawismaController extends Controller
 
         $validated = $request->validate($rules);
 
-        if ($user->isAdmin()) {
-            Dasawisma::create($validated);
-        } else {
-            $kader = $this->getKader();
-            if (! $kader) {
-                return redirect()->back()->with('error', 'Data kader tidak ditemukan.');
-            }
-            Dasawisma::create(array_merge($validated, ['kader_id' => $kader->id]));
-        }
+        Dasawisma::create($validated);
 
         return redirect()->back()->with('success', 'Dasawisma berhasil ditambahkan.');
     }
 
     public function edit(Dasawisma $dasawisma): Response
     {
-        $this->authorizeKader($dasawisma);
+        $this->authorizeAdmin();
 
         return Inertia::render('Kader/Dasawisma/Edit', [
             'dasawisma' => $dasawisma,
@@ -81,7 +125,7 @@ class DasawismaController extends Controller
 
     public function update(Request $request, Dasawisma $dasawisma): RedirectResponse
     {
-        $this->authorizeKader($dasawisma);
+        $this->authorizeAdmin();
 
         $rules = [
             'nama_dasawisma' => 'required|string|max:255',
@@ -103,12 +147,26 @@ class DasawismaController extends Controller
 
     public function destroy(Dasawisma $dasawisma): RedirectResponse
     {
-        $this->authorizeKader($dasawisma);
+        $this->authorizeAdmin();
         $dasawisma->delete();
 
         return redirect()->back()->with('success', 'Dasawisma berhasil dihapus.');
     }
 
+    /**
+     * Memastikan hanya Admin yang bisa mengakses CRUD Dasawisma.
+     */
+    private function authorizeAdmin(): void
+    {
+        if (! auth()->user()->isAdmin()) {
+            abort(403, 'Hanya Admin yang dapat mengelola data Dasawisma.');
+        }
+    }
+
+    /**
+     * Memastikan kader hanya bisa melihat dasawisma miliknya.
+     * Admin bisa lihat semua.
+     */
     private function authorizeKader(Dasawisma $dasawisma): void
     {
         if (auth()->user()->isAdmin()) {

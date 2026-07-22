@@ -71,7 +71,16 @@ watch(search, () => { currentPage.value = 1; });
 function downloadPdf() {
     const url = new URL(window.location.href);
     url.pathname = url.pathname.replace(/\/$/, '') + '/download-pdf';
-    window.open(url.toString(), '_blank');
+    
+    // Create an anchor element to trigger download instead of window.open
+    // This prevents the browser from blocking it as a popup
+    const link = document.createElement('a');
+    link.href = url.toString();
+    link.target = '_blank';
+    link.download = 'laporan-rekap.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function printReport() {
@@ -152,7 +161,7 @@ const totals = computed(() => {
         <!-- Print Header (Hidden on screen) -->
         <div class="hidden print:block mb-8 text-center">
             <h1 class="text-2xl font-bold">Laporan Rekapitulasi Data Warga</h1>
-            <p class="text-gray-600">Sistem Informasi Dasawisma Dompas</p>
+            <p class="text-gray-600">Aplikasi Pendataan Warga TP-PKK Berbasis Website Pada Dasawisma Desa Dompas</p>
             <div class="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium border-t border-b border-gray-200 py-3">
                 <p v-if="props.active_filters?.rt">RT: <span class="text-gray-800">{{ props.active_filters.rt }}</span></p>
                 <p v-if="props.active_filters?.rw">RW: <span class="text-gray-800">{{ props.active_filters.rw }}</span></p>

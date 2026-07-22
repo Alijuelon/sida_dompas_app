@@ -13,7 +13,7 @@ withDefaults(
 </script>
 
 <template>
-    <Head title="Selamat Datang - SIDA-Dompas" />
+    <Head title="Selamat Datang - Aplikasi Pendataan Warga TP-PKK" />
 
     <div class="relative min-h-screen w-full overflow-x-hidden bg-slate-50 text-slate-800 dark:bg-zinc-950 dark:text-slate-100 font-sans selection:bg-emerald-500/30">
         <!-- Background Effects -->
@@ -30,8 +30,8 @@ withDefaults(
                     </svg>
                 </div>
                 <div>
-                    <p class="text-xl font-black leading-none tracking-wide text-emerald-900 dark:text-emerald-100">SIDA</p>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">Dompas</p>
+                    <p class="text-[14px] font-black leading-tight tracking-wide text-emerald-900 dark:text-emerald-100">TP-PKK</p>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Desa Dompas</p>
                 </div>
             </div>
 
@@ -67,9 +67,9 @@ withDefaults(
                     Sistem Digitalisasi Desa
                 </div>
 
-                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    Sistem Informasi Dasawisma <br class="hidden md:block"/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Desa Dompas</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Aplikasi Pendataan Warga TP-PKK <br class="hidden md:block"/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 text-2xl md:text-4xl mt-2 block">Berbasis Website Pada Dasawisma Desa Dompas</span>
                 </h1>
 
                 <p class="mx-auto max-w-2xl text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed">

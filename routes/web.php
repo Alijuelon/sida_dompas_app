@@ -45,19 +45,22 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('laporan/download-pdf', [LaporanController::class, 'downloadPdf'])->name('laporan.download-pdf');
 
+    // Data Dasawisma (Admin: CRUD penuh)
+    Route::get('dasawisma', [DasawismaController::class, 'index'])->name('dasawisma.index');
+    Route::get('dasawisma/{dasawisma}', [DasawismaController::class, 'show'])->name('dasawisma.show');
+    Route::post('dasawisma', [DasawismaController::class, 'store'])->name('dasawisma.store');
+    Route::put('dasawisma/{dasawisma}', [DasawismaController::class, 'update'])->name('dasawisma.update');
+    Route::delete('dasawisma/{dasawisma}', [DasawismaController::class, 'destroy'])->name('dasawisma.destroy');
+
 });
 
 // Kader routes
 Route::middleware(['auth', 'verified', 'kader'])->prefix('kader')->name('kader.')->group(function () {
     Route::get('dashboard', [KaderDashboardController::class, 'index'])->name('dashboard');
 
-    // Data Dasawisma
+    // Data Dasawisma (Kader: hanya lihat)
     Route::get('dasawisma', [DasawismaController::class, 'index'])->name('dasawisma.index');
-    Route::get('dasawisma/create', [DasawismaController::class, 'create'])->name('dasawisma.create');
-    Route::post('dasawisma', [DasawismaController::class, 'store'])->name('dasawisma.store');
-    Route::get('dasawisma/{dasawisma}/edit', [DasawismaController::class, 'edit'])->name('dasawisma.edit');
-    Route::put('dasawisma/{dasawisma}', [DasawismaController::class, 'update'])->name('dasawisma.update');
-    Route::delete('dasawisma/{dasawisma}', [DasawismaController::class, 'destroy'])->name('dasawisma.destroy');
+    Route::get('dasawisma/{dasawisma}', [DasawismaController::class, 'show'])->name('dasawisma.show');
 
     // Data Keluarga (KK)
     Route::get('keluarga', [KeluargaController::class, 'index'])->name('keluarga.index');
