@@ -17,6 +17,7 @@ class AnggotaKeluargaRequest extends FormRequest
         $anggotaId = $this->route('anggotaKeluarga')?->id;
 
         return [
+            'no_reg'                => ['nullable', 'string', 'max:50'],
             'nik'                   => [
                 'required', 'string', 'size:16',
                 $anggotaId
