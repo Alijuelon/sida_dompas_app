@@ -14,7 +14,6 @@ const anggotaTemplate = () => ({
     nik: '',
     nama_anggota: '',
     status_dalam_keluarga: 'Anggota Keluarga',
-    pekerjaan: '',
     status_perkawinan: 'Lajang',
     jenis_kelamin: 'L',
     agama: 'Islam',

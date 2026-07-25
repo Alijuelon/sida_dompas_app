@@ -72,8 +72,9 @@ function openEditAnggota(ak: any) {
     editAnggotaForm.jenis_kelamin = ak.jenis_kelamin;
     editAnggotaForm.tanggal_lahir = ak.tanggal_lahir?.split('T')[0] ?? ak.tanggal_lahir;
     editAnggotaForm.agama = ak.agama ?? '';
-    editAnggotaForm.pendidikan = ak.pendidikan ?? '';
-    editAnggotaForm.pekerjaan = ak.pekerjaan ?? '';
+    // Sinkronisasi field duplikat: prioritaskan field baru, fallback ke field lama
+    editAnggotaForm.pendidikan = ak.pendidikan || ak.pendidikan_terakhir || '';
+    editAnggotaForm.pekerjaan = ak.pekerjaan || ak.pekerjaan_utama || '';
     editAnggotaForm.status_dalam_keluarga = ak.status_dalam_keluarga ?? '';
     editAnggotaForm.status_perkawinan = ak.status_perkawinan ?? '';
     editAnggotaForm.dasa_wisma = ak.dasa_wisma ?? '';
@@ -88,8 +89,8 @@ function openEditAnggota(ak: any) {
     editAnggotaForm.kecamatan = ak.kecamatan ?? '';
     editAnggotaForm.kabupaten_kota = ak.kabupaten_kota ?? '';
     editAnggotaForm.provinsi = ak.provinsi ?? '';
-    editAnggotaForm.pendidikan_terakhir = ak.pendidikan_terakhir ?? '';
-    editAnggotaForm.pekerjaan_utama = ak.pekerjaan_utama ?? '';
+    editAnggotaForm.pendidikan_terakhir = ak.pendidikan_terakhir || ak.pendidikan || '';
+    editAnggotaForm.pekerjaan_utama = ak.pekerjaan_utama || ak.pekerjaan || '';
     editAnggotaForm.akseptor_kb = ak.akseptor_kb ? '1' : '0';
     editAnggotaForm.jenis_akseptor_kb = ak.jenis_akseptor_kb ?? '';
     editAnggotaForm.aktif_posyandu = ak.aktif_posyandu ? '1' : '0';
@@ -219,7 +220,7 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         <div>
                             <p class="text-xs font-medium text-gray-400 uppercase">Dasawisma</p>
                             <p class="mt-0.5 font-semibold text-gray-700">{{ keluarga.dasawisma?.nama_dasawisma ?? '-'
-                                }}</p>
+                            }}</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-400 uppercase">RT/RW</p>
@@ -338,7 +339,7 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         <div class="flex justify-between"><span class="text-gray-500">SPAL</span><span
                                 class="font-semibold"
                                 :class="keluarga.memiliki_spal ? 'text-emerald-600' : 'text-red-500'">{{
-                                yn(keluarga.memiliki_spal) }}</span></div>
+                                    yn(keluarga.memiliki_spal) }}</span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Jamban</span><span
                                 class="font-semibold"
                                 :class="keluarga.memiliki_jamban ? 'text-emerald-600' : 'text-red-500'">{{
@@ -359,7 +360,7 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         <div class="flex justify-between"><span class="text-gray-500">UP2K</span><span
                                 class="font-semibold"
                                 :class="keluarga.ikut_up2k ? 'text-emerald-600' : 'text-red-500'">{{
-                                yn(keluarga.ikut_up2k) }}</span></div>
+                                    yn(keluarga.ikut_up2k) }}</span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Pemanfaatan Pekarangan</span><span
                                 class="font-semibold"
                                 :class="keluarga.ikut_pekarangan ? 'text-emerald-600' : 'text-red-500'">{{
@@ -367,7 +368,7 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         <div class="flex justify-between"><span class="text-gray-500">Industri Rumah Tangga</span><span
                                 class="font-semibold"
                                 :class="keluarga.ikut_industri ? 'text-emerald-600' : 'text-red-500'">{{
-                                yn(keluarga.ikut_industri) }}</span></div>
+                                    yn(keluarga.ikut_industri) }}</span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Kerja Bakti</span><span
                                 class="font-semibold"
                                 :class="keluarga.ikut_kerja_bakti ? 'text-emerald-600' : 'text-red-500'">{{
@@ -443,13 +444,14 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                                 </td>
                                 <td class="px-5 py-3.5 text-xs text-gray-500">{{ formatDate(ak.tanggal_lahir) }}</td>
                                 <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.status_dalam_keluarga ?? '-' }}</td>
-                                <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.pekerjaan || ak.pekerjaan_utama || '-' }}</td>
+                                <td class="px-5 py-3.5 text-xs text-gray-500">{{ ak.pekerjaan || ak.pekerjaan_utama ||
+                                    '-' }}</td>
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <a :href="`/kader/anggota/${ak.id}/edit`"
+                                        <button @click="openEditAnggota(ak)"
                                             class="rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 transition hover:bg-amber-100">
                                             Edit
-                                        </a>
+                                        </button>
                                         <button @click="openDeleteAnggota(ak.id, ak.nama_anggota)"
                                             class="rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-100">
                                             Hapus

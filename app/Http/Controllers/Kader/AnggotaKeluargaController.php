@@ -27,6 +27,18 @@ class AnggotaKeluargaController extends Controller
         $data['ikut_paud_sejenis']         = $data['ikut_paud_sejenis'] ?? false;
         $data['ikut_koperasi']             = $data['ikut_koperasi'] ?? false;
 
+        // Sinkronisasi field duplikat agar konsisten
+        if (isset($data['pekerjaan'])) {
+            $data['pekerjaan_utama'] = $data['pekerjaan'];
+        } elseif (isset($data['pekerjaan_utama'])) {
+            $data['pekerjaan'] = $data['pekerjaan_utama'];
+        }
+        if (isset($data['pendidikan'])) {
+            $data['pendidikan_terakhir'] = $data['pendidikan'];
+        } elseif (isset($data['pendidikan_terakhir'])) {
+            $data['pendidikan'] = $data['pendidikan_terakhir'];
+        }
+
         $keluarga->anggotaKeluargas()->create($data);
 
         // Sinkronisasi jumlah_anggota dari count aktual
@@ -61,6 +73,18 @@ class AnggotaKeluargaController extends Controller
         $data['ikut_kelompok_belajar']     = $data['ikut_kelompok_belajar'] ?? false;
         $data['ikut_paud_sejenis']         = $data['ikut_paud_sejenis'] ?? false;
         $data['ikut_koperasi']             = $data['ikut_koperasi'] ?? false;
+
+        // Sinkronisasi field duplikat agar konsisten
+        if (isset($data['pekerjaan'])) {
+            $data['pekerjaan_utama'] = $data['pekerjaan'];
+        } elseif (isset($data['pekerjaan_utama'])) {
+            $data['pekerjaan'] = $data['pekerjaan_utama'];
+        }
+        if (isset($data['pendidikan'])) {
+            $data['pendidikan_terakhir'] = $data['pendidikan'];
+        } elseif (isset($data['pendidikan_terakhir'])) {
+            $data['pendidikan'] = $data['pendidikan_terakhir'];
+        }
 
         $anggotaKeluarga->update($data);
 

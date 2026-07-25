@@ -224,6 +224,18 @@ class KeluargaController extends Controller
                 $anggotaData['ikut_paud_sejenis']         = $anggotaData['ikut_paud_sejenis'] ?? false;
                 $anggotaData['ikut_koperasi']             = $anggotaData['ikut_koperasi'] ?? false;
 
+                // Sinkronisasi field duplikat agar konsisten
+                if (!empty($anggotaData['pekerjaan'])) {
+                    $anggotaData['pekerjaan_utama'] = $anggotaData['pekerjaan'];
+                } elseif (!empty($anggotaData['pekerjaan_utama'])) {
+                    $anggotaData['pekerjaan'] = $anggotaData['pekerjaan_utama'];
+                }
+                if (!empty($anggotaData['pendidikan'])) {
+                    $anggotaData['pendidikan_terakhir'] = $anggotaData['pendidikan'];
+                } elseif (!empty($anggotaData['pendidikan_terakhir'])) {
+                    $anggotaData['pendidikan'] = $anggotaData['pendidikan_terakhir'];
+                }
+
                 $keluarga->anggotaKeluargas()->create($anggotaData);
             }
 
