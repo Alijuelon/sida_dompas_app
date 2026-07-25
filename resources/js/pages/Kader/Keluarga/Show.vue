@@ -448,10 +448,10 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                                     '-' }}</td>
                                 <td class="px-5 py-3.5">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <button @click="openEditAnggota(ak)"
+                                        <a :href="`/kader/anggota/${ak.id}/edit`"
                                             class="rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 transition hover:bg-amber-100">
                                             Edit
-                                        </button>
+                                        </a>
                                         <button @click="openDeleteAnggota(ak.id, ak.nama_anggota)"
                                             class="rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-100">
                                             Hapus
