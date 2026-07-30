@@ -23,6 +23,7 @@ class AnggotaKeluargaController extends Controller
         $data['aktif_posyandu']            = $data['aktif_posyandu'] ?? false;
         $data['ikut_bina_keluarga_balita'] = $data['ikut_bina_keluarga_balita'] ?? false;
         $data['memiliki_tabungan']         = $data['memiliki_tabungan'] ?? false;
+        $data['keterangan_tabungan']       = $data['keterangan_tabungan'] ?? null;
         $data['ikut_kelompok_belajar']     = $data['ikut_kelompok_belajar'] ?? false;
         $data['ikut_paud_sejenis']         = $data['ikut_paud_sejenis'] ?? false;
         $data['ikut_koperasi']             = $data['ikut_koperasi'] ?? false;
@@ -70,6 +71,7 @@ class AnggotaKeluargaController extends Controller
         $data['aktif_posyandu']            = $data['aktif_posyandu'] ?? false;
         $data['ikut_bina_keluarga_balita'] = $data['ikut_bina_keluarga_balita'] ?? false;
         $data['memiliki_tabungan']         = $data['memiliki_tabungan'] ?? false;
+        $data['keterangan_tabungan']       = $data['keterangan_tabungan'] ?? null;
         $data['ikut_kelompok_belajar']     = $data['ikut_kelompok_belajar'] ?? false;
         $data['ikut_paud_sejenis']         = $data['ikut_paud_sejenis'] ?? false;
         $data['ikut_koperasi']             = $data['ikut_koperasi'] ?? false;

@@ -42,6 +42,7 @@ class AnggotaKeluarga extends Model
         'frekuensi_posyandu',
         'ikut_bina_keluarga_balita',
         'memiliki_tabungan',
+        'keterangan_tabungan',
         'ikut_kelompok_belajar',
         'jenis_paket_belajar',
         'ikut_paud_sejenis',

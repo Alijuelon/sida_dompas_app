@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -8,6 +8,9 @@ const props = defineProps<{
 }>();
 
 const step = ref(1);
+
+// Opsi sumber air untuk multi-select
+const sumberAirOptions = ['PDAM', 'Sumur', 'Sungai', 'Mata Air', 'Air Hujan', 'Lainnya'];
 
 const anggotaTemplate = () => ({
     no_reg: '',
@@ -44,6 +47,7 @@ const anggotaTemplate = () => ({
     jenis_koperasi: '',
     ikut_bina_keluarga_balita: '0',
     memiliki_tabungan: '0',
+    keterangan_tabungan: '',
     ikut_paud_sejenis: '0',
 });
 
@@ -76,7 +80,9 @@ const form = useForm({
     memiliki_spal: false,
     memiliki_jamban: false,
     menempel_stiker_p4k: false,
-    sumber_air: '',
+    jenis_stiker: '',
+    sumber_air: [] as string[],
+    sumber_air_lainnya: '',
     makanan_pokok: '',
     ikut_up2k: false,
     ikut_pekarangan: false,
@@ -86,9 +92,36 @@ const form = useForm({
     anggota: [anggotaTemplate()],
 });
 
+// Indikator total anggota aktif
+const totalAnggotaAktif = computed(() => form.anggota.length);
+
 onMounted(() => {
     form.anggota[0].status_dalam_keluarga = 'Kepala Rumah Tangga';
 });
+
+function toggleSumberAir(option: string) {
+    const idx = form.sumber_air.indexOf(option);
+    if (idx === -1) {
+        form.sumber_air.push(option);
+    } else {
+        form.sumber_air.splice(idx, 1);
+    }
+    // Reset lainnya jika Lainnya di-uncheck
+    if (option === 'Lainnya' && idx !== -1) {
+        form.sumber_air_lainnya = '';
+    }
+}
+
+// Regex validasi NIK format kependudukan (6 digit wilayah + tanggal lahir encoded + 4 digit urutan)
+function isValidNIK(nik: string): boolean {
+    if (!nik || nik.length !== 16) return false;
+    return /^[0-9]{6}(0[1-9]|[12][0-9]|[3-7][0-9])(0[1-9]|1[0-2])\d{6}$/.test(nik);
+}
+
+function isValidKK(kk: string): boolean {
+    if (!kk || kk.length !== 16) return false;
+    return /^[0-9]{6}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{6}$/.test(kk);
+}
 
 function tambahAnggota() {
     const t = anggotaTemplate();
@@ -125,9 +158,13 @@ function nextStep() {
         
         if (!form.no_kk) { form.setError('no_kk', 'Nomor KK wajib diisi.'); hasError = true; }
         else if (form.no_kk.length !== 16) { form.setError('no_kk', 'Nomor KK harus tepat 16 digit.'); hasError = true; }
+        else if (!isValidKK(form.no_kk)) { form.setError('no_kk', 'Format No. KK tidak valid. Harus 16 digit angka sesuai format kependudukan.'); hasError = true; }
         
         if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Rumah Tangga wajib diisi.'); hasError = true; }
         if (!form.dasawisma_id) { form.setError('dasawisma_id', 'Dasawisma wajib dipilih.'); hasError = true; }
+        if (!form.rt) { form.setError('rt', 'RT wajib diisi.'); hasError = true; }
+        if (!form.rw) { form.setError('rw', 'RW wajib diisi.'); hasError = true; }
+        if (!form.dusun_lingkungan) { form.setError('dusun_lingkungan', 'Dusun / Lingkungan wajib dipilih.'); hasError = true; }
         
         if (hasError) {
             showErrorToast('Mohon lengkapi field yang ditandai bintang (*) sebelum melanjutkan.');
@@ -139,6 +176,21 @@ function nextStep() {
             form.anggota[0].nama_anggota = form.nama_kepala_keluarga;
         }
     }
+
+    if (step.value === 2) {
+        let hasError = false;
+        if (form.sumber_air.length === 0) { form.setError('sumber_air' as any, 'Sumber air wajib dipilih minimal satu.'); hasError = true; }
+        if (form.sumber_air.includes('Lainnya') && !form.sumber_air_lainnya) { form.setError('sumber_air_lainnya' as any, 'Keterangan sumber air lainnya wajib diisi.'); hasError = true; }
+        if (!form.makanan_pokok) { form.setError('makanan_pokok' as any, 'Makanan pokok wajib dipilih.'); hasError = true; }
+        if (form.menempel_stiker_p4k && !form.jenis_stiker) { form.setError('jenis_stiker' as any, 'Jenis stiker wajib diisi jika menempel stiker.'); hasError = true; }
+        
+        if (hasError) {
+            showErrorToast('Mohon lengkapi field yang ditandai bintang (*) sebelum melanjutkan.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     step.value++;
 }
@@ -149,6 +201,23 @@ function prevStep() {
 }
 
 function submit() {
+    // Validasi NIK sebelum submit
+    form.clearErrors();
+    let hasError = false;
+    form.anggota.forEach((a, idx) => {
+        if (!a.nik) { form.setError(`anggota.${idx}.nik` as any, 'NIK wajib diisi.'); hasError = true; }
+        else if (!isValidNIK(a.nik)) { form.setError(`anggota.${idx}.nik` as any, 'Format NIK tidak valid. Harus 16 digit sesuai format kependudukan.'); hasError = true; }
+        if (!a.nama_anggota) { form.setError(`anggota.${idx}.nama_anggota` as any, 'Nama lengkap wajib diisi.'); hasError = true; }
+        if (!a.tanggal_lahir) { form.setError(`anggota.${idx}.tanggal_lahir` as any, 'Tanggal lahir wajib diisi.'); hasError = true; }
+        if (a.memiliki_tabungan === '1' && !a.keterangan_tabungan) { form.setError(`anggota.${idx}.keterangan_tabungan` as any, 'Keterangan tabungan wajib diisi.'); hasError = true; }
+    });
+
+    if (hasError) {
+        showErrorToast('Mohon lengkapi data anggota yang ditandai bintang (*) sebelum menyimpan.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+
     form.post('/kader/keluarga');
 }
 
@@ -246,6 +315,7 @@ const progressWidth = () => {
                         <div class="relative">
                             <input v-model="form.no_kk" type="text" maxlength="16" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer font-mono" placeholder=" " required />
                             <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">No. Kartu Keluarga <span class="text-red-500">*</span></label>
+                            <p v-if="form.errors.no_kk" class="mt-1 text-xs text-red-500">{{ form.errors.no_kk }}</p>
                         </div>
                         
                         <div class="relative lg:col-span-2">
@@ -264,11 +334,11 @@ const progressWidth = () => {
                         <div class="flex gap-4">
                             <div class="relative w-1/2">
                                 <input v-model="form.rt" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT</label>
+                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT <span class="text-red-500">*</span></label>
                             </div>
                             <div class="relative w-1/2">
                                 <input v-model="form.rw" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW</label>
+                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW <span class="text-red-500">*</span></label>
                             </div>
                         </div>
                         
@@ -311,69 +381,79 @@ const progressWidth = () => {
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-users text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Jml KK</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Jml KK <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_kk" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Laki-Laki</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Laki-Laki <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_laki_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-venus text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Perempuan</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Perempuan <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
+                        <!-- Balita Laki-laki dengan info usia -->
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Laki-laki</label>
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 0–5 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Laki-laki <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_balita_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
+                        <!-- Balita Perempuan dengan info usia -->
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Perempuan</label>
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 0–5 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Perempuan <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_balita_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
+                        <!-- PUS dengan info usia -->
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Pasangan Usia Subur</label>
+                            <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 17–45 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Pasangan Usia Subur <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_pus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
+                        <!-- WUS dengan info usia -->
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-person-dress text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Wanita Usia Subur</label>
+                            <i class="fa-solid fa-person-dress text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 15–49 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Wanita Usia Subur <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_wus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-eye-slash text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">3 Buta</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">3 Buta <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_buta" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-person-pregnant text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Hamil</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Hamil <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_ibu_hamil" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-person-breastfeeding text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Menyusui</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Menyusui <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_ibu_menyusui" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
+                        <!-- Lansia dengan info usia -->
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-person-cane text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Lansia</label>
+                            <i class="fa-solid fa-person-cane text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia ≥ 60 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Lansia <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_lansia" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-wheelchair text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Berkebutuhan Khusus</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Berkebutuhan Khusus <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_berkebutuhan_khusus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                     </div>
 
                     <!-- Kriteria Rumah -->
                     <div class="mt-8">
-                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah</h4>
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah <span class="text-red-500">*</span></h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
                                 <input v-model="form.sehat_layak_huni" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
@@ -391,26 +471,46 @@ const progressWidth = () => {
                                 <input v-model="form.memiliki_jamban" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
                                 <label class="text-sm font-medium text-gray-700">Memiliki Jamban Keluarga</label>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.menempel_stiker_p4k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Menempel Stiker P4K/PMI/PMK</label>
+                            <!-- Stiker P4K dengan field jenis stiker -->
+                            <div class="sm:col-span-2 bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.menempel_stiker_p4k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Menempel Stiker P4K/PMI/PMK</label>
+                                </div>
+                                <!-- Field jenis stiker muncul saat checkbox dicentang -->
+                                <div v-if="form.menempel_stiker_p4k" class="mt-3 pt-3 border-t border-amber-200 transition-all duration-300">
+                                    <label class="block text-xs font-semibold text-amber-700 mb-1.5">Jenis Stiker <span class="text-red-500">*</span></label>
+                                    <input v-model="form.jenis_stiker" type="text" placeholder="Misal: Bantuan Beras, PMI, PMK..." class="w-full rounded-xl border border-amber-300 p-2.5 text-sm bg-amber-50/50 shadow-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none placeholder-amber-300">
+                                    <p v-if="form.errors['jenis_stiker' as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors['jenis_stiker' as keyof typeof form.errors] }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sumber Air & Makanan -->
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Sumber Air: Multi-select checkboxes -->
                         <div>
-                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Sumber Air Keluarga</h4>
-                            <select v-model="form.sumber_air" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
-                                <option value="">- Pilih Sumber Air -</option>
-                                <option value="PDAM">PDAM</option>
-                                <option value="Sumur">Sumur</option>
-                                <option value="Lainnya">DLL (Lainnya)</option>
-                            </select>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Sumber Air Keluarga <span class="text-red-500">*</span></h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div v-for="opt in sumberAirOptions" :key="opt" 
+                                    class="flex items-center gap-2 bg-white p-2.5 rounded-xl border transition-colors cursor-pointer"
+                                    :class="form.sumber_air.includes(opt) ? 'border-emerald-300 bg-emerald-50/50' : 'border-gray-200'"
+                                    @click="toggleSumberAir(opt)">
+                                    <input type="checkbox" :checked="form.sumber_air.includes(opt)" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                                    <label class="text-sm font-medium text-gray-700 cursor-pointer">{{ opt }}</label>
+                                </div>
+                            </div>
+                            <!-- Input lainnya muncul saat Lainnya dipilih -->
+                            <div v-if="form.sumber_air.includes('Lainnya')" class="mt-3 transition-all duration-300">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Jelaskan Sumber Air Lainnya <span class="text-red-500">*</span></label>
+                                <input v-model="form.sumber_air_lainnya" type="text" placeholder="Jelaskan sumber air lainnya..." class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                <p v-if="form.errors['sumber_air_lainnya' as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors['sumber_air_lainnya' as keyof typeof form.errors] }}</p>
+                            </div>
+                            <p v-if="form.errors['sumber_air' as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors['sumber_air' as keyof typeof form.errors] }}</p>
                         </div>
                         <div>
-                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Makanan Pokok</h4>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Makanan Pokok <span class="text-red-500">*</span></h4>
                             <select v-model="form.makanan_pokok" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                 <option value="">- Pilih Makanan Pokok -</option>
                                 <option value="Beras">Beras</option>
@@ -421,23 +521,39 @@ const progressWidth = () => {
 
                     <!-- Kegiatan Warga -->
                     <div class="mt-8">
-                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kegiatan Warga</h4>
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kegiatan Warga <span class="text-red-500">*</span></h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_up2k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">UP2K</label>
+                            <!-- UP2K -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_up2k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">UP2K</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Usaha Peningkatan Pendapatan Keluarga</p>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_pekarangan" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Pemanfaatan Tanah Pekarangan</label>
+                            <!-- Pemanfaatan Tanah Pekarangan -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_pekarangan" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Pemanfaatan Tanah Pekarangan</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Memanfaatkan lahan kosong untuk bercocok tanam</p>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_industri" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Industri Rumah Tangga</label>
+                            <!-- Industri Rumah Tangga -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_industri" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Industri Rumah Tangga</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Usaha produksi skala kecil yang dilakukan di rumah</p>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_kerja_bakti" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Kerja Bakti</label>
+                            <!-- Kerja Bakti -->
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_kerja_bakti" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Kerja Bakti</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Kegiatan gotong-royong membersihkan lingkungan</p>
                             </div>
                         </div>
                     </div>
@@ -454,6 +570,11 @@ const progressWidth = () => {
                                 <h3 class="text-xl font-bold text-gray-800">Detail Anggota Warga PKK</h3>
                                 <p class="text-sm text-gray-500">Masukkan detail tiap anggota keluarga.</p>
                             </div>
+                            <!-- Badge total anggota aktif -->
+                            <span class="bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ml-2">
+                                <i class="fa-solid fa-users text-emerald-500"></i>
+                                Total Anggota: {{ totalAnggotaAktif }}
+                            </span>
                         </div>
                         <button type="button" @click="tambahAnggota" class="inline-flex items-center justify-center gap-2 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm">
                             <i class="fa-solid fa-user-plus"></i> Tambah Anggota
@@ -478,11 +599,12 @@ const progressWidth = () => {
                                 <!-- Data Pokok -->
                                 <div class="relative">
                                     <input v-model="anggota.no_reg" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">No. Registrasi</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">No. Registrasi <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.nik" type="text" maxlength="16" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer font-mono" placeholder=" " required />
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">NIK (No KTP) <span class="text-red-500">*</span></label>
+                                    <p v-if="form.errors[`anggota.${idx}.nik` as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors[`anggota.${idx}.nik` as keyof typeof form.errors] }}</p>
                                 </div>
                                 <div class="relative md:col-span-2">
                                     <input v-model="anggota.nama_anggota" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " required />
@@ -510,7 +632,7 @@ const progressWidth = () => {
                                         <option value="Janda">Janda</option>
                                         <option value="Duda">Duda</option>
                                     </select>
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Status Perkawinan</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Status Perkawinan <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <select v-model="anggota.jenis_kelamin" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none" required>
@@ -528,12 +650,12 @@ const progressWidth = () => {
                                         <option value="Buddha">Buddha</option>
                                         <option value="Konghucu">Konghucu</option>
                                     </select>
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Agama</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Agama <span class="text-red-500">*</span></label>
                                 </div>
                                 
                                 <div class="relative">
                                     <input v-model="anggota.tempat_lahir" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Tempat Lahir</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Tempat Lahir <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.tanggal_lahir" type="date" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" required />
@@ -541,7 +663,7 @@ const progressWidth = () => {
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.umur" type="number" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Umur</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Umur <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.jabatan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
@@ -561,7 +683,7 @@ const progressWidth = () => {
                                         <option value="S2">S2</option>
                                         <option value="S3">S3</option>
                                     </select>
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pendidikan Terakhir</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pendidikan Terakhir <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <select v-model="anggota.pekerjaan" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer appearance-none">
@@ -578,11 +700,11 @@ const progressWidth = () => {
                                         <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
                                         <option value="Lainnya">Lainnya</option>
                                     </select>
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pekerjaan</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 font-medium">Pekerjaan <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.pekerjaan_utama" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Pekerjaan Utama</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Pekerjaan Utama <span class="text-red-500">*</span></label>
                                 </div>
 
                                 <!-- Data Wilayah Individu -->
@@ -591,37 +713,37 @@ const progressWidth = () => {
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.dasa_wisma" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Dasa Wisma</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Dasa Wisma <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.nama_kepala_rumah_tangga" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kepala Rumah Tangga</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kepala Rumah Tangga <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative md:col-span-2">
                                     <input v-model="anggota.alamat_jalan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Alamat / Jalan</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Alamat / Jalan <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="flex gap-2">
                                     <div class="relative w-1/2">
                                         <input v-model="anggota.rt" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                        <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT</label>
+                                        <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT <span class="text-red-500">*</span></label>
                                     </div>
                                     <div class="relative w-1/2">
                                         <input v-model="anggota.rw" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                        <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW</label>
+                                        <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW <span class="text-red-500">*</span></label>
                                     </div>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.desa_kelurahan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Desa/Kelurahan</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Desa/Kelurahan <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.kecamatan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kecamatan</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kecamatan <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
                                     <input v-model="anggota.kabupaten_kota" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kab/Kota</label>
+                                    <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Kab/Kota <span class="text-red-500">*</span></label>
                                 </div>
                                 
                                 <!-- Data PKK Khusus -->
@@ -630,37 +752,37 @@ const progressWidth = () => {
                                 </div>
 
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Akseptor KB?</label>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Akseptor KB? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.akseptor_kb" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
                                     </select>
                                     <div v-if="anggota.akseptor_kb === '1'" class="mt-3 pt-3 border-t border-gray-200">
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Akseptor KB</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Akseptor KB <span class="text-red-500">*</span></label>
                                         <input v-model="anggota.jenis_akseptor_kb" type="text" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                     </div>
                                 </div>
 
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Aktif Posyandu?</label>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Aktif Posyandu? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.aktif_posyandu" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
                                     </select>
                                     <div v-if="anggota.aktif_posyandu === '1'" class="mt-3 pt-3 border-t border-gray-200">
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Frekuensi Posyandu</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Frekuensi Posyandu <span class="text-red-500">*</span></label>
                                         <input v-model="anggota.frekuensi_posyandu" type="text" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                     </div>
                                 </div>
 
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut Kelompok Belajar?</label>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut Kelompok Belajar? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.ikut_kelompok_belajar" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
                                     </select>
                                     <div v-if="anggota.ikut_kelompok_belajar === '1'" class="mt-3 pt-3 border-t border-gray-200">
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Paket Belajar</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Paket Belajar <span class="text-red-500">*</span></label>
                                         <select v-model="anggota.jenis_paket_belajar" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                             <option value="">-Pilih-</option>
                                             <option value="Paket A">Paket A</option>
@@ -672,34 +794,41 @@ const progressWidth = () => {
                                 </div>
 
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut Koperasi?</label>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut Koperasi? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.ikut_koperasi" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white focus:ring-emerald-500 focus:border-emerald-500 shadow-sm">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
                                     </select>
                                     <div v-if="anggota.ikut_koperasi === '1'" class="mt-3 pt-3 border-t border-gray-200">
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Koperasi</label>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Jenis Koperasi <span class="text-red-500">*</span></label>
                                         <input v-model="anggota.jenis_koperasi" type="text" class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                     </div>
                                 </div>
 
                                 <!-- Boolean fields only -->
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="mb-1.5 block text-xs font-semibold text-gray-600">Nama Kepala Rumah Tangga <span class="text-red-500">*</span></label>
+                                    <label class="mb-1.5 block text-xs font-semibold text-gray-600">Ikut Bina Keluarga Balita? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.ikut_bina_keluarga_balita" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
                                     </select>
                                 </div>
+                                <!-- Tabungan dengan field keterangan -->
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Memiliki Tabungan?</label>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Memiliki Tabungan? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.memiliki_tabungan" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
                                     </select>
+                                    <!-- Field keterangan tabungan muncul saat Ya -->
+                                    <div v-if="anggota.memiliki_tabungan === '1'" class="mt-3 pt-3 border-t border-gray-200">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Keterangan Tabungan <span class="text-red-500">*</span></label>
+                                        <input v-model="anggota.keterangan_tabungan" type="text" placeholder="Contoh: Bank BRI, Tabungan Pos..." class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                        <p v-if="form.errors[`anggota.${idx}.keterangan_tabungan` as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors[`anggota.${idx}.keterangan_tabungan` as keyof typeof form.errors] }}</p>
+                                    </div>
                                 </div>
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors md:col-span-2">
-                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut PAUD Sejenis?</label>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-2">Ikut PAUD Sejenis? <span class="text-red-500">*</span></label>
                                     <select v-model="anggota.ikut_paud_sejenis" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 outline-none">
                                         <option value="0">Tidak</option>
                                         <option value="1">Ya</option>
