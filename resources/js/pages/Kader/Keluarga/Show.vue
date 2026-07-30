@@ -58,6 +58,7 @@ const editAnggotaForm = useForm({
     frekuensi_posyandu: '',
     ikut_bina_keluarga_balita: '0',
     memiliki_tabungan: '0',
+    keterangan_tabungan: '',
     ikut_kelompok_belajar: '0',
     jenis_paket_belajar: '',
     ikut_paud_sejenis: '0',
@@ -97,6 +98,7 @@ function openEditAnggota(ak: any) {
     editAnggotaForm.frekuensi_posyandu = ak.frekuensi_posyandu ?? '';
     editAnggotaForm.ikut_bina_keluarga_balita = ak.ikut_bina_keluarga_balita ? '1' : '0';
     editAnggotaForm.memiliki_tabungan = ak.memiliki_tabungan ? '1' : '0';
+    editAnggotaForm.keterangan_tabungan = ak.keterangan_tabungan ?? '';
     editAnggotaForm.ikut_kelompok_belajar = ak.ikut_kelompok_belajar ? '1' : '0';
     editAnggotaForm.jenis_paket_belajar = ak.jenis_paket_belajar ?? '';
     editAnggotaForm.ikut_paud_sejenis = ak.ikut_paud_sejenis ? '1' : '0';
@@ -144,6 +146,7 @@ const tambahForm = useForm({
     frekuensi_posyandu: '',
     ikut_bina_keluarga_balita: '0',
     memiliki_tabungan: '0',
+    keterangan_tabungan: '',
     ikut_kelompok_belajar: '0',
     jenis_paket_belajar: '',
     ikut_paud_sejenis: '0',
@@ -292,32 +295,37 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         <p class="text-[10px] text-pink-500 uppercase font-bold">Perempuan</p>
                         <p class="text-lg font-black text-pink-700">{{ keluarga.jumlah_perempuan ?? 0 }}</p>
                     </div>
-                    <div class="rounded-xl bg-sky-50 p-3 text-center">
-                        <p class="text-[10px] text-sky-500 uppercase font-bold">Balita Laki-laki</p>
+                    <div class="rounded-xl bg-sky-50 p-3 text-center relative group">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Usia 0-5</span>
+                        <p class="text-[10px] text-sky-500 uppercase font-bold mt-1">Balita Laki-laki</p>
                         <p class="text-lg font-black text-sky-700">{{ keluarga.jumlah_balita_laki ?? 0 }}</p>
                     </div>
-                    <div class="rounded-xl bg-pink-50 p-3 text-center">
-                        <p class="text-[10px] text-pink-500 uppercase font-bold">Balita Perempuan</p>
+                    <div class="rounded-xl bg-pink-50 p-3 text-center relative group">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Usia 0-5</span>
+                        <p class="text-[10px] text-pink-500 uppercase font-bold mt-1">Balita Perempuan</p>
                         <p class="text-lg font-black text-pink-700">{{ keluarga.jumlah_balita_perempuan ?? 0 }}</p>
                     </div>
-                    <div class="rounded-xl bg-purple-50 p-3 text-center">
-                        <p class="text-[10px] text-purple-500 uppercase font-bold">PUS</p>
+                    <div class="rounded-xl bg-purple-50 p-3 text-center relative group">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Usia 17-45</span>
+                        <p class="text-[10px] text-purple-500 uppercase font-bold mt-1">PUS</p>
                         <p class="text-lg font-black text-purple-700">{{ keluarga.jumlah_pus ?? 0 }}</p>
                     </div>
-                    <div class="rounded-xl bg-fuchsia-50 p-3 text-center">
-                        <p class="text-[10px] text-fuchsia-500 uppercase font-bold">WUS</p>
+                    <div class="rounded-xl bg-fuchsia-50 p-3 text-center relative group">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Usia 15-49</span>
+                        <p class="text-[10px] text-fuchsia-500 uppercase font-bold mt-1">WUS</p>
                         <p class="text-lg font-black text-fuchsia-700">{{ keluarga.jumlah_wus ?? 0 }}</p>
                     </div>
                     <div class="rounded-xl bg-rose-50 p-3 text-center">
-                        <p class="text-[10px] text-rose-500 uppercase font-bold">Ibu Hamil</p>
+                        <p class="text-[10px] text-rose-500 uppercase font-bold mt-1">Ibu Hamil</p>
                         <p class="text-lg font-black text-rose-700">{{ keluarga.jumlah_ibu_hamil ?? 0 }}</p>
                     </div>
                     <div class="rounded-xl bg-amber-50 p-3 text-center">
-                        <p class="text-[10px] text-amber-500 uppercase font-bold">Ibu Menyusui</p>
+                        <p class="text-[10px] text-amber-500 uppercase font-bold mt-1">Ibu Menyusui</p>
                         <p class="text-lg font-black text-amber-700">{{ keluarga.jumlah_ibu_menyusui ?? 0 }}</p>
                     </div>
-                    <div class="rounded-xl bg-teal-50 p-3 text-center">
-                        <p class="text-[10px] text-teal-500 uppercase font-bold">Lansia</p>
+                    <div class="rounded-xl bg-teal-50 p-3 text-center relative group">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Usia ≥ 60</span>
+                        <p class="text-[10px] text-teal-500 uppercase font-bold mt-1">Lansia</p>
                         <p class="text-lg font-black text-teal-700">{{ keluarga.jumlah_lansia ?? 0 }}</p>
                     </div>
                 </div>
@@ -344,12 +352,25 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                                 class="font-semibold"
                                 :class="keluarga.memiliki_jamban ? 'text-emerald-600' : 'text-red-500'">{{
                                     yn(keluarga.memiliki_jamban) }}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Stiker P4K</span><span
-                                class="font-semibold"
-                                :class="keluarga.menempel_stiker_p4k ? 'text-emerald-600' : 'text-red-500'">{{
-                                    yn(keluarga.menempel_stiker_p4k) }}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Sumber Air</span><span
-                                class="font-semibold text-gray-800">{{ keluarga.sumber_air ?? '-' }}</span></div>
+                        <div class="flex justify-between flex-wrap"><span class="text-gray-500">Stiker P4K</span>
+                            <div class="text-right">
+                                <span class="font-semibold" :class="keluarga.menempel_stiker_p4k ? 'text-emerald-600' : 'text-red-500'">{{ yn(keluarga.menempel_stiker_p4k) }}</span>
+                                <div v-if="keluarga.menempel_stiker_p4k && keluarga.jenis_stiker" class="text-xs text-amber-600 mt-0.5 bg-amber-50 px-2 py-0.5 rounded">{{ keluarga.jenis_stiker }}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between flex-wrap"><span class="text-gray-500">Sumber Air</span>
+                            <div class="flex flex-wrap gap-1 justify-end">
+                                <template v-if="keluarga.sumber_air && Array.isArray(keluarga.sumber_air) && keluarga.sumber_air.length > 0">
+                                    <span v-for="s in keluarga.sumber_air" :key="s" class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs font-semibold">{{ s }}</span>
+                                </template>
+                                <template v-else-if="keluarga.sumber_air && typeof keluarga.sumber_air === 'string' && keluarga.sumber_air.startsWith('[') && JSON.parse(keluarga.sumber_air).length > 0">
+                                    <span v-for="s in JSON.parse(keluarga.sumber_air)" :key="s" class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs font-semibold">{{ s }}</span>
+                                </template>
+                                <span v-else-if="keluarga.sumber_air && typeof keluarga.sumber_air === 'string'" class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs font-semibold">{{ keluarga.sumber_air }}</span>
+                                <span v-else class="text-gray-400">-</span>
+                            </div>
+                        </div>
+                        <div v-if="keluarga.sumber_air_lainnya" class="flex justify-between"><span class="text-gray-500">Sumber Air Lainnya</span><span class="font-semibold text-gray-800">{{ keluarga.sumber_air_lainnya }}</span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Makanan Pokok</span><span
                                 class="font-semibold text-gray-800">{{ keluarga.makanan_pokok ?? '-' }}</span></div>
                     </div>
@@ -380,10 +401,10 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
             <!-- ====== DAFTAR ANGGOTA ====== -->
             <div class="rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
                 <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-gray-800">
-                        Anggota Keluarga
-                        <span class="ml-2 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
-                            {{ keluarga.anggota_keluargas?.length ?? 0 }}
+                    <h2 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                        Daftar Anggota Warga PKK
+                        <span class="rounded-full bg-emerald-100 ring-1 ring-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users"></i> Total Aktif: {{ keluarga.anggota_keluargas?.length ?? 0 }}
                         </span>
                     </h2>
                     <button @click="showTambahAnggota = true"
@@ -537,6 +558,19 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                             <option v-for="sk in statusKawinOptions" :key="sk" :value="sk">{{ sk }}</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Memiliki Tabungan?</label>
+                        <select v-model="editAnggotaForm.memiliki_tabungan"
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
+                            <option value="0">Tidak</option>
+                            <option value="1">Ya</option>
+                        </select>
+                    </div>
+                    <div v-if="editAnggotaForm.memiliki_tabungan === '1'">
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Keterangan Tabungan *</label>
+                        <input v-model="editAnggotaForm.keterangan_tabungan" type="text" placeholder="Misal: Bank BRI..."
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                    </div>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
                     <button type="button" @click="showEditAnggota = false"
@@ -618,6 +652,19 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                             <option value="">-- Pilih --</option>
                             <option v-for="sk in statusKawinOptions" :key="sk" :value="sk">{{ sk }}</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Memiliki Tabungan?</label>
+                        <select v-model="tambahForm.memiliki_tabungan"
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
+                            <option value="0">Tidak</option>
+                            <option value="1">Ya</option>
+                        </select>
+                    </div>
+                    <div v-if="tambahForm.memiliki_tabungan === '1'">
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Keterangan Tabungan *</label>
+                        <input v-model="tambahForm.keterangan_tabungan" type="text" placeholder="Misal: Bank BRI..."
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">

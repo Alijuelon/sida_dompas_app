@@ -10,6 +10,9 @@ const props = defineProps<{
 
 const step = ref(1);
 
+// Opsi sumber air untuk multi-select
+const sumberAirOptions = ['PDAM', 'Sumur', 'Sungai', 'Mata Air', 'Air Hujan', 'Lainnya'];
+
 const form = useForm({
     no_kk: props.keluarga.no_kk || '',
     nama_kepala_keluarga: props.keluarga.nama_kepala_keluarga || '',
@@ -38,7 +41,9 @@ const form = useForm({
     memiliki_spal: !!props.keluarga.memiliki_spal,
     memiliki_jamban: !!props.keluarga.memiliki_jamban,
     menempel_stiker_p4k: !!props.keluarga.menempel_stiker_p4k,
-    sumber_air: props.keluarga.sumber_air || '',
+    jenis_stiker: props.keluarga.jenis_stiker || '',
+    sumber_air: (Array.isArray(props.keluarga.sumber_air) ? props.keluarga.sumber_air : (typeof props.keluarga.sumber_air === 'string' && props.keluarga.sumber_air.startsWith('[') ? JSON.parse(props.keluarga.sumber_air) : (props.keluarga.sumber_air ? [props.keluarga.sumber_air] : []))) as string[],
+    sumber_air_lainnya: props.keluarga.sumber_air_lainnya || '',
     makanan_pokok: props.keluarga.makanan_pokok || '',
     ikut_up2k: !!props.keluarga.ikut_up2k,
     ikut_pekarangan: !!props.keluarga.ikut_pekarangan,
@@ -58,6 +63,24 @@ function showErrorToast(msg: string) {
     }, 4000);
 }
 
+function toggleSumberAir(option: string) {
+    const idx = form.sumber_air.indexOf(option);
+    if (idx === -1) {
+        form.sumber_air.push(option);
+    } else {
+        form.sumber_air.splice(idx, 1);
+    }
+    if (option === 'Lainnya' && idx !== -1) {
+        form.sumber_air_lainnya = '';
+    }
+}
+
+// Regex validasi NIK/KK
+function isValidKK(kk: string): boolean {
+    if (!kk || kk.length !== 16) return false;
+    return /^[0-9]{6}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{6}$/.test(kk);
+}
+
 function nextStep() {
     form.clearErrors();
     if (step.value === 1) {
@@ -65,9 +88,12 @@ function nextStep() {
         
         if (!form.no_kk) { form.setError('no_kk', 'Nomor KK wajib diisi.'); hasError = true; }
         else if (form.no_kk.length !== 16) { form.setError('no_kk', 'Nomor KK harus tepat 16 digit.'); hasError = true; }
+        else if (!isValidKK(form.no_kk)) { form.setError('no_kk', 'Format No. KK tidak valid. Harus 16 digit angka sesuai format kependudukan.'); hasError = true; }
         
         if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Keluarga wajib diisi.'); hasError = true; }
         if (!form.dasawisma_id) { form.setError('dasawisma_id', 'Dasawisma wajib dipilih.'); hasError = true; }
+        if (!form.rt) { form.setError('rt', 'RT wajib diisi.'); hasError = true; }
+        if (!form.rw) { form.setError('rw', 'RW wajib diisi.'); hasError = true; }
         if (!form.dusun_lingkungan) { form.setError('dusun_lingkungan', 'Dusun / Lingkungan wajib dipilih.'); hasError = true; }
         
         if (hasError) {
@@ -86,6 +112,19 @@ function prevStep() {
 }
 
 function submit() {
+    form.clearErrors();
+    let hasError = false;
+    if (form.sumber_air.length === 0) { form.setError('sumber_air' as any, 'Sumber air wajib dipilih minimal satu.'); hasError = true; }
+    if (form.sumber_air.includes('Lainnya') && !form.sumber_air_lainnya) { form.setError('sumber_air_lainnya' as any, 'Keterangan sumber air lainnya wajib diisi.'); hasError = true; }
+    if (!form.makanan_pokok) { form.setError('makanan_pokok' as any, 'Makanan pokok wajib dipilih.'); hasError = true; }
+    if (form.menempel_stiker_p4k && !form.jenis_stiker) { form.setError('jenis_stiker' as any, 'Jenis stiker wajib diisi jika menempel stiker.'); hasError = true; }
+    
+    if (hasError) {
+        showErrorToast('Mohon lengkapi field yang ditandai bintang (*) sebelum menyimpan.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+
     form.put(`/kader/keluarga/${props.keluarga.id}`);
 }
 
@@ -156,7 +195,7 @@ const progressWidth = () => {
             </div>
 
             <!-- FORM START -->
-            <form @submit.prevent="submit" novalidate class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <form @submit.prevent="submit" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 
                 <!-- ================= STEP 1 ================= -->
                 <div v-show="step === 1" class="p-6 md:p-8 transition-all duration-300">
@@ -174,6 +213,7 @@ const progressWidth = () => {
                         <div class="relative">
                             <input v-model="form.no_kk" type="text" maxlength="16" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer font-mono" placeholder=" " required />
                             <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">No. Kartu Keluarga <span class="text-red-500">*</span></label>
+                            <p v-if="form.errors.no_kk" class="mt-1 text-xs text-red-500">{{ form.errors.no_kk }}</p>
                         </div>
                         
                         <div class="relative lg:col-span-2">
@@ -192,11 +232,11 @@ const progressWidth = () => {
                         <div class="flex gap-4">
                             <div class="relative w-1/2">
                                 <input v-model="form.rt" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT</label>
+                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RT <span class="text-red-500">*</span></label>
                             </div>
                             <div class="relative w-1/2">
                                 <input v-model="form.rw" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
-                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW</label>
+                                <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">RW <span class="text-red-500">*</span></label>
                             </div>
                         </div>
                         
@@ -239,69 +279,74 @@ const progressWidth = () => {
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-users text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Jml KK</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Jml KK <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_kk" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Laki-Laki</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Laki-Laki <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_laki_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-venus text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Perempuan</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Perempuan <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Laki-laki</label>
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 0–5 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Laki-laki <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_balita_laki" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Perempuan</label>
+                            <i class="fa-solid fa-baby text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 0–5 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Balita Perempuan <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_balita_perempuan" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Pasangan Usia Subur</label>
+                            <i class="fa-solid fa-venus-mars text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 17–45 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Pasangan Usia Subur <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_pus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-person-dress text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Wanita Usia Subur</label>
+                            <i class="fa-solid fa-person-dress text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia 15–49 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Wanita Usia Subur <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_wus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-eye-slash text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">3 Buta</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">3 Buta <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_buta" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-person-pregnant text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Hamil</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Hamil <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_ibu_hamil" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-person-breastfeeding text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Menyusui</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Ibu Menyusui <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_ibu_menyusui" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
-                            <i class="fa-solid fa-person-cane text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Lansia</label>
+                            <i class="fa-solid fa-person-cane text-gray-400 group-hover:text-emerald-500 text-xl mb-2 transition-colors"></i>
+                            <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-semibold mb-1">ℹ️ Usia ≥ 60 tahun</span>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Lansia <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_lansia" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                         <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-emerald-300 transition-colors group">
                             <i class="fa-solid fa-wheelchair text-gray-400 group-hover:text-emerald-500 text-xl mb-3 transition-colors"></i>
-                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Berkebutuhan Khusus</label>
+                            <label class="text-xs font-semibold text-gray-600 mb-2 text-center h-8 flex items-center">Berkebutuhan Khusus <span class="text-red-500 ml-0.5">*</span></label>
                             <input v-model="form.jumlah_berkebutuhan_khusus" type="number" class="w-20 text-center rounded-xl border border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white p-2 font-mono text-lg font-semibold text-emerald-700">
                         </div>
                     </div>
 
                     <!-- Kriteria Rumah -->
                     <div class="mt-8">
-                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah</h4>
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah <span class="text-red-500">*</span></h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
                                 <input v-model="form.sehat_layak_huni" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
@@ -319,26 +364,44 @@ const progressWidth = () => {
                                 <input v-model="form.memiliki_jamban" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
                                 <label class="text-sm font-medium text-gray-700">Memiliki Jamban Keluarga</label>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.menempel_stiker_p4k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Menempel Stiker P4K/PMI/PMK</label>
+                            <!-- Stiker P4K dengan field jenis stiker -->
+                            <div class="sm:col-span-2 bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.menempel_stiker_p4k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Menempel Stiker P4K/PMI/PMK</label>
+                                </div>
+                                <div v-if="form.menempel_stiker_p4k" class="mt-3 pt-3 border-t border-amber-200 transition-all duration-300">
+                                    <label class="block text-xs font-semibold text-amber-700 mb-1.5">Jenis Stiker <span class="text-red-500">*</span></label>
+                                    <input v-model="form.jenis_stiker" type="text" placeholder="Misal: Bantuan Beras, PMI, PMK..." class="w-full rounded-xl border border-amber-300 p-2.5 text-sm bg-amber-50/50 shadow-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none placeholder-amber-300">
+                                    <p v-if="form.errors['jenis_stiker' as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors['jenis_stiker' as keyof typeof form.errors] }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Sumber Air & Makanan -->
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Sumber Air: Multi-select checkboxes -->
                         <div>
-                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Sumber Air Keluarga</h4>
-                            <select v-model="form.sumber_air" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
-                                <option value="">- Pilih Sumber Air -</option>
-                                <option value="PDAM">PDAM</option>
-                                <option value="Sumur">Sumur</option>
-                                <option value="Lainnya">DLL (Lainnya)</option>
-                            </select>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Sumber Air Keluarga <span class="text-red-500">*</span></h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div v-for="opt in sumberAirOptions" :key="opt" 
+                                    class="flex items-center gap-2 bg-white p-2.5 rounded-xl border transition-colors cursor-pointer"
+                                    :class="form.sumber_air.includes(opt) ? 'border-emerald-300 bg-emerald-50/50' : 'border-gray-200'"
+                                    @click="toggleSumberAir(opt)">
+                                    <input type="checkbox" :checked="form.sumber_air.includes(opt)" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 pointer-events-none">
+                                    <label class="text-sm font-medium text-gray-700 cursor-pointer">{{ opt }}</label>
+                                </div>
+                            </div>
+                            <div v-if="form.sumber_air.includes('Lainnya')" class="mt-3 transition-all duration-300">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Jelaskan Sumber Air Lainnya <span class="text-red-500">*</span></label>
+                                <input v-model="form.sumber_air_lainnya" type="text" placeholder="Jelaskan sumber air lainnya..." class="w-full rounded-xl border border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                                <p v-if="form.errors['sumber_air_lainnya' as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors['sumber_air_lainnya' as keyof typeof form.errors] }}</p>
+                            </div>
+                            <p v-if="form.errors['sumber_air' as keyof typeof form.errors]" class="mt-1 text-xs text-red-500">{{ form.errors['sumber_air' as keyof typeof form.errors] }}</p>
                         </div>
                         <div>
-                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Makanan Pokok</h4>
+                            <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Makanan Pokok <span class="text-red-500">*</span></h4>
                             <select v-model="form.makanan_pokok" class="w-full rounded-xl border-gray-300 p-2.5 text-sm bg-white shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
                                 <option value="">- Pilih Makanan Pokok -</option>
                                 <option value="Beras">Beras</option>
@@ -349,23 +412,35 @@ const progressWidth = () => {
 
                     <!-- Kegiatan Warga -->
                     <div class="mt-8">
-                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kegiatan Warga</h4>
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kegiatan Warga <span class="text-red-500">*</span></h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_up2k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">UP2K</label>
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_up2k" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">UP2K</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Usaha Peningkatan Pendapatan Keluarga</p>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_pekarangan" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Pemanfaatan Tanah Pekarangan</label>
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_pekarangan" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Pemanfaatan Tanah Pekarangan</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Memanfaatkan lahan kosong untuk bercocok tanam</p>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_industri" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Industri Rumah Tangga</label>
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_industri" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Industri Rumah Tangga</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Usaha produksi skala kecil yang dilakukan di rumah</p>
                             </div>
-                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
-                                <input v-model="form.ikut_kerja_bakti" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
-                                <label class="text-sm font-medium text-gray-700">Kerja Bakti</label>
+                            <div class="bg-white p-3 rounded-xl border border-gray-200">
+                                <div class="flex items-center gap-3">
+                                    <input v-model="form.ikut_kerja_bakti" type="checkbox" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <label class="text-sm font-medium text-gray-700">Kerja Bakti</label>
+                                </div>
+                                <p class="text-[11px] text-gray-400 italic mt-1.5 pl-8">Kegiatan gotong-royong membersihkan lingkungan</p>
                             </div>
                         </div>
                     </div>
