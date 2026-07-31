@@ -128,7 +128,11 @@ class DatabaseSeeder extends Seeder
                 // Buat 10 Keluarga per Dasawisma
                 for ($k = 1; $k <= 10; $k++) {
                     $kepalaKeluargaName = $faker->name('male');
-                    $noKk = $faker->numerify('140801##########'); // Format Riau, Bengkalis
+                    $kkDay = str_pad(rand(1, 28), 2, '0', STR_PAD_LEFT);
+                    $kkMonth = str_pad(rand(1, 12), 2, '0', STR_PAD_LEFT);
+                    $kkYear = str_pad(rand(10, 24), 2, '0', STR_PAD_LEFT);
+                    $kkSuffix = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                    $noKk = "140801{$kkDay}{$kkMonth}{$kkYear}{$kkSuffix}";
                     $jumlahAnggota = $faker->numberBetween(3, 6);
                     
                     $keluarga = Keluarga::create([
@@ -158,7 +162,9 @@ class DatabaseSeeder extends Seeder
                         'memiliki_spal'              => $faker->boolean(70),
                         'memiliki_jamban'            => $faker->boolean(85),
                         'menempel_stiker_p4k'        => $faker->boolean(60),
-                        'sumber_air'                 => $faker->randomElement(['PDAM', 'Sumur', 'Lainnya']),
+                        'jenis_stiker'               => 'Stiker P4K',
+                        'sumber_air'                 => [$faker->randomElement(['PDAM', 'Sumur', 'Sungai', 'Mata Air', 'Air Hujan'])],
+                        'sumber_air_lainnya'         => null,
                         'makanan_pokok'              => $faker->randomElement(['Beras', 'Non Beras']),
                         'ikut_up2k'                  => $faker->boolean(50),
                         'ikut_pekarangan'            => $faker->boolean(60),
@@ -225,10 +231,20 @@ class DatabaseSeeder extends Seeder
                         $ikutBelajar = $faker->boolean(20);
                         $ikutKoperasi = ($isKK || $isIstri) ? $faker->boolean(40) : false;
 
+                        $tglLahirObj = Carbon::parse($tglLahir);
+                        $day = $tglLahirObj->format('d');
+                        $month = $tglLahirObj->format('m');
+                        $year = $tglLahirObj->format('y');
+                        if ($gender === 'P') {
+                            $day = str_pad((int)$day + 40, 2, '0', STR_PAD_LEFT);
+                        }
+                        $suffix = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                        $nik = "140801{$day}{$month}{$year}{$suffix}";
+
                         AnggotaKeluarga::create([
                             'keluarga_id'              => $keluarga->id,
                             'no_reg'                   => $faker->numerify('REG-####-####'),
-                            'nik'                      => $faker->numerify('140801##########'),
+                            'nik'                      => $nik,
                             'nama_anggota'             => $nama,
                             'jenis_kelamin'            => $gender,
                             'tanggal_lahir'            => $tglLahir,

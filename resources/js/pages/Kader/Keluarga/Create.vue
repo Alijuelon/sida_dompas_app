@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     dasawismas: Array<{ id: number; nama_dasawisma: string; rt: string; rw: string }>;
 }>();
+
+const page = usePage();
+const isAdmin = computed(() => (page.props as any).auth?.user?.role === 'admin');
 
 const step = ref(1);
 
@@ -93,7 +96,16 @@ const form = useForm({
 });
 
 // Indikator total anggota aktif
-const totalAnggotaAktif = computed(() => form.anggota.length);
+const totalAnggotaAktif = computed(() => form.anggota.filter(a => typeof a.jabatan === 'string' && a.jabatan.trim() !== '').length);
+
+watch(() => form.anggota, (newVal) => {
+    newVal.forEach(a => {
+        if (a.jenis_kelamin === 'L') {
+            a.jabatan = '';
+        }
+    });
+}, { deep: true });
+
 
 onMounted(() => {
     form.anggota[0].status_dalam_keluarga = 'Kepala Rumah Tangga';
@@ -112,15 +124,22 @@ function toggleSumberAir(option: string) {
     }
 }
 
-// Regex validasi NIK format kependudukan (6 digit wilayah + tanggal lahir encoded + 4 digit urutan)
-function isValidNIK(nik: string): boolean {
-    if (!nik || nik.length !== 16) return false;
-    return /^[0-9]{6}(0[1-9]|[12][0-9]|[3-7][0-9])(0[1-9]|1[0-2])\d{6}$/.test(nik);
-}
+function validateKependudukan(tipe: 'KK' | 'NIK', no: string): { valid: boolean, message: string } {
+    if (!no) return { valid: false, message: `${tipe} wajib diisi.` };
+    if (!/^\d+$/.test(no)) return { valid: false, message: `${tipe} harus berupa angka tanpa spasi/huruf.` };
+    if (no.length !== 16) return { valid: false, message: `${tipe} harus 16 digit (terdeteksi ${no.length} digit).` };
 
-function isValidKK(kk: string): boolean {
-    if (!kk || kk.length !== 16) return false;
-    return /^[0-9]{6}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{6}$/.test(kk);
+    if (tipe === 'KK') {
+        if (!/^(1[1-9]|[2-9]\d)\d{4}(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{6}$/.test(no)) {
+            return { valid: false, message: 'Format No. KK tidak valid sesuai format kependudukan.' };
+        }
+    } else if (tipe === 'NIK') {
+        if (!/^(1[1-9]|[2-9]\d)\d{4}(0[1-9]|[12]\d|3[01]|[4-6]\d|7[01])(0[1-9]|1[0-2])\d{6}$/.test(no)) {
+            return { valid: false, message: 'Format NIK tidak valid sesuai format kependudukan.' };
+        }
+    }
+
+    return { valid: true, message: '' };
 }
 
 function tambahAnggota() {
@@ -156,9 +175,8 @@ function nextStep() {
     if (step.value === 1) {
         let hasError = false;
         
-        if (!form.no_kk) { form.setError('no_kk', 'Nomor KK wajib diisi.'); hasError = true; }
-        else if (form.no_kk.length !== 16) { form.setError('no_kk', 'Nomor KK harus tepat 16 digit.'); hasError = true; }
-        else if (!isValidKK(form.no_kk)) { form.setError('no_kk', 'Format No. KK tidak valid. Harus 16 digit angka sesuai format kependudukan.'); hasError = true; }
+        const kkVal = validateKependudukan('KK', form.no_kk);
+        if (!kkVal.valid) { form.setError('no_kk', kkVal.message); hasError = true; }
         
         if (!form.nama_kepala_keluarga) { form.setError('nama_kepala_keluarga', 'Nama Kepala Rumah Tangga wajib diisi.'); hasError = true; }
         if (!form.dasawisma_id) { form.setError('dasawisma_id', 'Dasawisma wajib dipilih.'); hasError = true; }
@@ -177,7 +195,7 @@ function nextStep() {
         }
     }
 
-    if (step.value === 2) {
+    if (step.value === 2 && !isAdmin.value) {
         let hasError = false;
         if (form.sumber_air.length === 0) { form.setError('sumber_air' as any, 'Sumber air wajib dipilih minimal satu.'); hasError = true; }
         if (form.sumber_air.includes('Lainnya') && !form.sumber_air_lainnya) { form.setError('sumber_air_lainnya' as any, 'Keterangan sumber air lainnya wajib diisi.'); hasError = true; }
@@ -205,11 +223,24 @@ function submit() {
     form.clearErrors();
     let hasError = false;
     form.anggota.forEach((a, idx) => {
-        if (!a.nik) { form.setError(`anggota.${idx}.nik` as any, 'NIK wajib diisi.'); hasError = true; }
-        else if (!isValidNIK(a.nik)) { form.setError(`anggota.${idx}.nik` as any, 'Format NIK tidak valid. Harus 16 digit sesuai format kependudukan.'); hasError = true; }
-        if (!a.nama_anggota) { form.setError(`anggota.${idx}.nama_anggota` as any, 'Nama lengkap wajib diisi.'); hasError = true; }
-        if (!a.tanggal_lahir) { form.setError(`anggota.${idx}.tanggal_lahir` as any, 'Tanggal lahir wajib diisi.'); hasError = true; }
-        if (a.memiliki_tabungan === '1' && !a.keterangan_tabungan) { form.setError(`anggota.${idx}.keterangan_tabungan` as any, 'Keterangan tabungan wajib diisi.'); hasError = true; }
+        const reqFields = ['no_reg', 'nik', 'nama_anggota', 'status_dalam_keluarga', 'status_perkawinan', 'jenis_kelamin', 'agama', 'tempat_lahir', 'tanggal_lahir', 'umur', 'pendidikan_terakhir', 'pekerjaan_utama'];
+        for (const field of reqFields) {
+            if (!a[field as keyof typeof a]) { 
+                const niceName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                form.setError(`anggota.${idx}.${field}` as any, `Anggota ${idx + 1}: ${niceName} wajib diisi.`); 
+                hasError = true; 
+            }
+        }
+        
+        if (a.nik) {
+            const nikVal = validateKependudukan('NIK', a.nik);
+            if (!nikVal.valid) { form.setError(`anggota.${idx}.nik` as any, `Anggota ${idx + 1}: ` + nikVal.message); hasError = true; }
+        }
+        if (a.memiliki_tabungan === '1' && !a.keterangan_tabungan) { form.setError(`anggota.${idx}.keterangan_tabungan` as any, `Anggota ${idx + 1}: Keterangan tabungan wajib diisi.`); hasError = true; }
+        if (a.ikut_kelompok_belajar === '1' && !a.jenis_paket_belajar) { form.setError(`anggota.${idx}.jenis_paket_belajar` as any, `Anggota ${idx + 1}: Jenis paket belajar wajib diisi.`); hasError = true; }
+        if (a.ikut_koperasi === '1' && !a.jenis_koperasi) { form.setError(`anggota.${idx}.jenis_koperasi` as any, `Anggota ${idx + 1}: Jenis koperasi wajib diisi.`); hasError = true; }
+        if (a.akseptor_kb === '1' && !a.jenis_akseptor_kb) { form.setError(`anggota.${idx}.jenis_akseptor_kb` as any, `Anggota ${idx + 1}: Jenis akseptor KB wajib diisi.`); hasError = true; }
+        if (a.aktif_posyandu === '1' && !a.frekuensi_posyandu) { form.setError(`anggota.${idx}.frekuensi_posyandu` as any, `Anggota ${idx + 1}: Frekuensi posyandu wajib diisi.`); hasError = true; }
     });
 
     if (hasError) {
@@ -218,7 +249,13 @@ function submit() {
         return;
     }
 
-    form.post('/kader/keluarga');
+    form.post('/kader/keluarga', {
+        preserveScroll: true,
+        onError: () => {
+            showErrorToast('Terdapat data yang belum lengkap atau tidak valid. Silakan periksa form Anda.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
 }
 
 const progressWidth = () => {
@@ -368,13 +405,19 @@ const progressWidth = () => {
 
                 <!-- ================= STEP 2 ================= -->
                 <div v-show="step === 2" class="p-6 md:p-8 transition-all duration-300">
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="bg-teal-50 text-teal-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
-                            <i class="fa-solid fa-chart-pie text-lg"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">Rekapitulasi Keluarga</h3>
-                            <p class="text-sm text-gray-500">Jumlah status dan kategori dalam keluarga.</p>
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-indigo-50 text-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
+                                <i class="fa-solid fa-list-check text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Rekapitulasi Keluarga</h3>
+                                <p class="text-sm text-gray-500">Perbarui jumlah status dan kategori dalam keluarga.</p>
+                                <p class="text-xs text-blue-600 mt-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <i class="fa-solid fa-circle-info mr-1"></i>
+                                    <strong>Keterangan Usia:</strong> Balita (0-5 tahun), Wanita Usia Subur / WUS (15-49 tahun), Pasangan Usia Subur / PUS (17-45 tahun), Lansia (≥ 60 tahun).
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
@@ -451,8 +494,17 @@ const progressWidth = () => {
                         </div>
                     </div>
 
+                    <!-- Bagian Survei (Hanya Kader) -->
+                    <div v-if="isAdmin" class="bg-amber-50 text-amber-700 px-4 py-3 rounded-xl text-sm font-semibold flex items-start gap-3 border border-amber-200 shadow-sm mt-8 mb-2">
+                        <i class="fa-solid fa-lock mt-0.5"></i>
+                        <div>
+                            Data Kriteria Rumah, Sumber Air, dan Kegiatan Warga di bawah ini hanya dapat diisi dan diubah oleh Kader yang turun langsung ke lapangan.
+                        </div>
+                    </div>
+                    
+                    <fieldset :disabled="isAdmin" class="border-0 p-0 m-0 w-full min-w-0" :class="{'opacity-70': isAdmin}">
                     <!-- Kriteria Rumah -->
-                    <div class="mt-8">
+                    <div class="mt-4">
                         <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah <span class="text-red-500">*</span></h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
@@ -557,6 +609,7 @@ const progressWidth = () => {
                             </div>
                         </div>
                     </div>
+                    </fieldset>
                 </div>
 
                 <!-- ================= STEP 3 ================= -->
@@ -569,6 +622,14 @@ const progressWidth = () => {
                             <div>
                                 <h3 class="text-xl font-bold text-gray-800">Detail Anggota Warga PKK</h3>
                                 <p class="text-sm text-gray-500">Masukkan detail tiap anggota keluarga.</p>
+                                <div class="mt-3 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm border border-emerald-100 flex items-center gap-2 font-medium">
+                                    <i class="fa-solid fa-users"></i>
+                                    Total Anggota Aktif di KK ini: <strong>{{ totalAnggotaAktif }}</strong> Orang
+                                </div>
+                                <p class="text-xs text-emerald-600 mt-1.5 italic px-2">
+                                    <i class="fa-solid fa-circle-info mr-1"></i>
+                                    *Penjelasan: Jumlah di atas merupakan total anggota keluarga yang masih aktif dan didata dalam kegiatan PKK.
+                                </p>
                             </div>
                             <!-- Badge total anggota aktif -->
                             <span class="bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ml-2">
@@ -666,7 +727,7 @@ const progressWidth = () => {
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Umur <span class="text-red-500">*</span></label>
                                 </div>
                                 <div class="relative">
-                                    <input v-model="anggota.jabatan" type="text" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
+                                    <input v-model="anggota.jabatan" type="text" :disabled="anggota.jenis_kelamin === 'L'" :class="{'opacity-50 cursor-not-allowed bg-gray-100': anggota.jenis_kelamin === 'L'}" class="block rounded-xl px-3 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 peer" placeholder=" " />
                                     <label class="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 font-medium">Jabatan PKK</label>
                                 </div>
 
@@ -747,8 +808,15 @@ const progressWidth = () => {
                                 </div>
                                 
                                 <!-- Data PKK Khusus -->
+                                <fieldset :disabled="isAdmin" :class="{ 'contents opacity-70': isAdmin, 'contents': !isAdmin }">
                                 <div class="md:col-span-4 mt-6 border-t border-emerald-100 pt-6">
-                                    <span class="text-sm font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-3 py-1.5 rounded-lg flex items-center gap-2 w-fit"><i class="fa-solid fa-leaf"></i> Data Khusus Warga PKK</span>
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="text-sm font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-3 py-1.5 rounded-lg flex items-center gap-2 w-fit"><i class="fa-solid fa-leaf"></i> Data Khusus Warga PKK</span>
+                                    </div>
+                                    <div v-if="isAdmin" class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-4 text-amber-800 text-sm shadow-sm flex items-start gap-3">
+                                        <i class="fa-solid fa-lock text-amber-500 text-lg mt-0.5"></i>
+                                        <p><strong>Area Terkunci:</strong> Data Khusus Warga PKK di bawah ini hanya dapat diisi dan diubah oleh Kader yang turun langsung ke lapangan.</p>
+                                    </div>
                                 </div>
 
                                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-colors">
@@ -834,6 +902,7 @@ const progressWidth = () => {
                                         <option value="1">Ya</option>
                                     </select>
                                 </div>
+                            </fieldset>
                             </div>
                         </div>
                     </div>

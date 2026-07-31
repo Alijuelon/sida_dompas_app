@@ -36,7 +36,12 @@ class KeluargaController extends Controller
 
         $query = Keluarga::whereIn('dasawisma_id', $dasawismaIds)
             ->with(['dasawisma', 'verifikasi'])
-            ->withCount('anggotaKeluargas');
+            ->withCount([
+                'anggotaKeluargas',
+                'anggotaKeluargas as anggota_aktif_count' => function ($query) {
+                    $query->whereNotNull('jabatan')->where('jabatan', '!=', '');
+                }
+            ]);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -82,9 +87,11 @@ class KeluargaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+                $isKader = \Illuminate\Support\Facades\Auth::user()->isKader();
+        
+        $rules = [
             'dasawisma_id'          => ['required', 'exists:dasawismas,id'],
-            'no_kk'                 => ['required', 'string', 'size:16', 'regex:/^[0-9]{6}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{6}$/', 'unique:keluargas,no_kk'],
+            'no_kk'                 => ['required', 'string', 'size:16', 'regex:/^(1[1-9]|[2-9]\d)\d{4}(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{6}$/', 'unique:keluargas,no_kk'],
             'nama_kepala_keluarga'  => ['required', 'string', 'max:255'],
             'rt'                    => ['required', 'string', 'max:10'],
             'rw'                    => ['required', 'string', 'max:10'],
@@ -105,70 +112,69 @@ class KeluargaController extends Controller
             'jumlah_ibu_menyusui'   => ['required', 'integer', 'min:0'],
             'jumlah_lansia'         => ['required', 'integer', 'min:0'],
             'jumlah_berkebutuhan_khusus' => ['required', 'integer', 'min:0'],
-            'sehat_layak_huni'      => ['required', 'boolean'],
-            'memiliki_tempat_sampah'=> ['required', 'boolean'],
-            'memiliki_spal'         => ['required', 'boolean'],
-            'memiliki_jamban'       => ['required', 'boolean'],
-            'menempel_stiker_p4k'   => ['required', 'boolean'],
+            'sehat_layak_huni'      => ['nullable', 'boolean'],
+            'memiliki_tempat_sampah'=> ['nullable', 'boolean'],
+            'memiliki_spal'         => ['nullable', 'boolean'],
+            'memiliki_jamban'       => ['nullable', 'boolean'],
+            'menempel_stiker_p4k'   => ['nullable', 'boolean'],
             'jenis_stiker'          => ['nullable', 'required_if:menempel_stiker_p4k,true,1', 'string', 'max:255'],
-            'sumber_air'            => ['required', 'array', 'min:1'],
-            'sumber_air.*'          => ['required', 'string', 'in:PDAM,Sumur,Sungai,Mata Air,Air Hujan,Lainnya'],
+            'sumber_air'            => [$isKader ? 'required' : 'nullable', 'array', $isKader ? 'min:1' : 'min:0'],
+            'sumber_air.*'          => ['nullable', 'string', 'in:PDAM,Sumur,Sungai,Mata Air,Air Hujan,Lainnya'],
             'sumber_air_lainnya'    => ['nullable', 'string', 'max:255'],
-            'makanan_pokok'         => ['required', 'string', 'max:255'],
-            'ikut_up2k'             => ['required', 'boolean'],
-            'ikut_pekarangan'       => ['required', 'boolean'],
-            'ikut_industri'         => ['required', 'boolean'],
-            'ikut_kerja_bakti'      => ['required', 'boolean'],
+            'makanan_pokok'         => [$isKader ? 'required' : 'nullable', 'string', 'max:255'],
+            'ikut_up2k'             => ['nullable', 'boolean'],
+            'ikut_pekarangan'       => ['nullable', 'boolean'],
+            'ikut_industri'         => ['nullable', 'boolean'],
+            'ikut_kerja_bakti'      => ['nullable', 'boolean'],
             'anggota'               => ['required', 'array', 'min:1'],
             'anggota.*.no_reg'      => ['required', 'string', 'max:50'],
-            'anggota.*.nik'         => ['required', 'string', 'size:16', 'regex:/^[0-9]{6}(0[1-9]|[12][0-9]|[3-7][0-9])(0[1-9]|1[0-2])\d{6}$/', 'distinct', 'unique:anggota_keluargas,nik'],
+            'anggota.*.nik'         => ['required', 'string', 'size:16', 'regex:/^(1[1-9]|[2-9]\d)\d{4}(0[1-9]|[12]\d|3[01]|[4-6]\d|7[01])(0[1-9]|1[0-2])\d{6}$/', 'distinct', 'unique:anggota_keluargas,nik'],
             'anggota.*.nama_anggota'=> ['required', 'string', 'max:255'],
             'anggota.*.jenis_kelamin'       => ['required', 'in:L,P'],
             'anggota.*.tanggal_lahir'       => ['required', 'date'],
             'anggota.*.agama'               => ['required', 'string', 'max:50'],
-            'anggota.*.pendidikan'          => ['required', 'string', 'max:100'],
-            'anggota.*.pekerjaan'           => ['required', 'string', 'max:100'],
+            'anggota.*.pendidikan'          => ['nullable', 'string', 'max:100'],
+            'anggota.*.pekerjaan'           => ['nullable', 'string', 'max:100'],
             'anggota.*.status_dalam_keluarga' => ['required', 'string', 'max:50'],
             'anggota.*.status_perkawinan'   => ['required', 'string', 'max:50'],
-            'anggota.*.dasa_wisma'          => ['required', 'string', 'max:255'],
-            'anggota.*.nama_kepala_rumah_tangga' => ['required', 'string', 'max:255'],
+            'anggota.*.dasa_wisma'          => ['nullable', 'string', 'max:255'],
+            'anggota.*.nama_kepala_rumah_tangga' => ['nullable', 'string', 'max:255'],
             'anggota.*.jabatan'             => ['nullable', 'string', 'max:255'],
             'anggota.*.tempat_lahir'        => ['required', 'string', 'max:255'],
             'anggota.*.umur'                => ['required', 'integer', 'min:0'],
-            'anggota.*.alamat_jalan'        => ['required', 'string', 'max:255'],
-            'anggota.*.rt'                  => ['required', 'string', 'max:10'],
-            'anggota.*.rw'                  => ['required', 'string', 'max:10'],
-            'anggota.*.desa_kelurahan'      => ['required', 'string', 'max:255'],
-            'anggota.*.kecamatan'           => ['required', 'string', 'max:255'],
-            'anggota.*.kabupaten_kota'      => ['required', 'string', 'max:255'],
-            'anggota.*.provinsi'            => ['required', 'string', 'max:255'],
-            'anggota.*.pendidikan_terakhir' => ['required', 'string', 'max:255'],
-            'anggota.*.pekerjaan_utama'     => ['required', 'string', 'max:255'],
-            'anggota.*.akseptor_kb'         => ['required', 'boolean'],
-            'anggota.*.jenis_akseptor_kb'   => ['nullable', 'string', 'max:255'],
-            'anggota.*.aktif_posyandu'      => ['required', 'boolean'],
-            'anggota.*.frekuensi_posyandu'  => ['nullable', 'string', 'max:255'],
-            'anggota.*.ikut_bina_keluarga_balita' => ['required', 'boolean'],
-            'anggota.*.memiliki_tabungan'   => ['required', 'boolean'],
+            'anggota.*.alamat_jalan'        => ['nullable', 'string', 'max:255'],
+            'anggota.*.rt'                  => ['nullable', 'string', 'max:10'],
+            'anggota.*.rw'                  => ['nullable', 'string', 'max:10'],
+            'anggota.*.desa_kelurahan'      => ['nullable', 'string', 'max:255'],
+            'anggota.*.kecamatan'           => ['nullable', 'string', 'max:255'],
+            'anggota.*.kabupaten_kota'      => ['nullable', 'string', 'max:255'],
+            'anggota.*.provinsi'            => ['nullable', 'string', 'max:255'],
+            'anggota.*.akseptor_kb'         => ['nullable', 'boolean'],
+            'anggota.*.jenis_akseptor_kb'   => ['nullable', 'string', 'max:100'],
+            'anggota.*.aktif_posyandu'      => ['nullable', 'boolean'],
+            'anggota.*.frekuensi_posyandu'  => ['nullable', 'string', 'max:100'],
+            'anggota.*.ikut_bina_keluarga_balita' => ['nullable', 'boolean'],
+            'anggota.*.memiliki_tabungan'   => ['nullable', 'boolean'],
             'anggota.*.keterangan_tabungan' => ['nullable', 'string', 'max:255'],
-            'anggota.*.ikut_kelompok_belajar'=> ['required', 'boolean'],
-            'anggota.*.jenis_paket_belajar' => ['nullable', 'string', 'max:255'],
-            'anggota.*.ikut_paud_sejenis'   => ['required', 'boolean'],
-            'anggota.*.ikut_koperasi'       => ['required', 'boolean'],
-            'anggota.*.jenis_koperasi'      => ['nullable', 'string', 'max:255'],
-        ], [
-            'no_kk.size'        => 'Nomor KK harus 16 digit.',
-            'no_kk.regex'       => 'Format No. KK tidak valid. Harus 16 digit angka sesuai format kependudukan.',
+            'anggota.*.ikut_kelompok_belajar' => ['nullable', 'boolean'],
+            'anggota.*.jenis_paket_belajar' => ['nullable', 'string', 'max:100'],
+            'anggota.*.ikut_paud_sejenis'   => ['nullable', 'boolean'],
+            'anggota.*.ikut_koperasi'       => ['nullable', 'boolean'],
+            'anggota.*.jenis_koperasi'      => ['nullable', 'string', 'max:100'],
+            'anggota.*.berkebutuhan_khusus' => ['nullable', 'boolean'],
+        ];
+
+        $validated = $request->validate($rules, [
+            'no_kk.regex'       => 'Format No. KK tidak valid. Harus 16 digit angka.',
             'no_kk.unique'      => 'Nomor KK sudah terdaftar.',
             'anggota.*.nik.size'=> 'NIK harus 16 digit.',
-            'anggota.*.nik.regex'    => 'Format NIK tidak valid. Harus 16 digit angka sesuai format kependudukan.',
+            'anggota.*.nik.regex' => 'Format NIK tidak valid sesuai format kependudukan.',
             'anggota.*.nik.unique'   => 'NIK sudah terdaftar.',
             'anggota.*.nik.distinct' => 'NIK anggota tidak boleh sama.',
             'anggota.min'       => 'Minimal harus ada 1 anggota keluarga.',
             'sumber_air.required' => 'Sumber air wajib dipilih minimal satu.',
-            'sumber_air.min'    => 'Sumber air wajib dipilih minimal satu.',
-            'jenis_stiker.required_if' => 'Jenis stiker wajib diisi jika menempel stiker.',
-            'anggota.*.keterangan_tabungan.required_if' => 'Keterangan tabungan wajib diisi jika memiliki tabungan.',
+            'makanan_pokok.required' => 'Makanan pokok wajib diisi.',
+            'jenis_stiker.required_if' => 'Jenis stiker wajib diisi jika Anda menempel stiker P4K.',
         ]);
 
         // Pastikan dasawisma milik kader login
@@ -225,10 +231,15 @@ class KeluargaController extends Controller
 
             foreach ($validated['anggota'] as $anggotaData) {
                 // Beri nilai default untuk kolom string yang tidak boleh null
-                $anggotaData['desa_kelurahan'] = $anggotaData['desa_kelurahan'] ?? 'Dompas';
-                $anggotaData['kecamatan']      = $anggotaData['kecamatan'] ?? 'Bukit Batu';
-                $anggotaData['kabupaten_kota'] = $anggotaData['kabupaten_kota'] ?? 'Bengkalis';
-                $anggotaData['provinsi']       = $anggotaData['provinsi'] ?? 'Riau';
+                $anggotaData['desa_kelurahan'] = $anggotaData['desa_kelurahan'] ?? ($validated['desa'] ?? 'Dompas');
+                $anggotaData['kecamatan']      = $anggotaData['kecamatan'] ?? ($validated['kecamatan'] ?? 'Bukit Batu');
+                $anggotaData['kabupaten_kota'] = $anggotaData['kabupaten_kota'] ?? ($validated['kabupaten'] ?? 'Bengkalis');
+                $anggotaData['provinsi']       = $anggotaData['provinsi'] ?? ($validated['provinsi'] ?? 'Riau');
+                $anggotaData['rt']             = $anggotaData['rt'] ?? $validated['rt'];
+                $anggotaData['rw']             = $anggotaData['rw'] ?? $validated['rw'];
+                $anggotaData['dasa_wisma']     = $anggotaData['dasa_wisma'] ?? Dasawisma::find($validated['dasawisma_id'])?->nama_dasawisma ?? '';
+                $anggotaData['nama_kepala_rumah_tangga'] = $anggotaData['nama_kepala_rumah_tangga'] ?? $validated['nama_kepala_keluarga'];
+                $anggotaData['alamat_jalan']   = $anggotaData['alamat_jalan'] ?? $validated['dusun_lingkungan'];
 
                 // Beri nilai default untuk kolom boolean yang tidak boleh null
                 $anggotaData['akseptor_kb']               = $anggotaData['akseptor_kb'] ?? false;
@@ -249,6 +260,11 @@ class KeluargaController extends Controller
                     $anggotaData['pendidikan_terakhir'] = $anggotaData['pendidikan'];
                 } elseif (!empty($anggotaData['pendidikan_terakhir'])) {
                     $anggotaData['pendidikan'] = $anggotaData['pendidikan_terakhir'];
+                }
+
+                // Logika Jabatan PKK: Hanya Perempuan yang bisa memiliki jabatan PKK
+                if (isset($anggotaData['jenis_kelamin']) && $anggotaData['jenis_kelamin'] === 'L') {
+                    $anggotaData['jabatan'] = null;
                 }
 
                 $keluarga->anggotaKeluargas()->create($anggotaData);

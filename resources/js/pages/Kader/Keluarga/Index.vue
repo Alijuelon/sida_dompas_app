@@ -172,9 +172,14 @@ function goToPage(url: string | null) {
                             <td class="px-5 py-3.5 font-semibold text-gray-800">{{ kk.nama_kepala_keluarga }}</td>
                             <td class="px-5 py-3.5 text-xs text-gray-500">{{ kk.dasawisma?.nama_dasawisma }}</td>
                             <td class="px-5 py-3.5 text-center">
-                                <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">
-                                    {{ kk.anggota_keluargas_count ?? kk.jumlah_anggota ?? 0 }} jiwa
-                                </span>
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                        <i class="fa-solid fa-users"></i> {{ kk.anggota_aktif_count ?? 0 }} Aktif
+                                    </span>
+                                    <span class="text-[10px] text-gray-400 font-medium">
+                                        dari {{ kk.anggota_keluargas_count ?? kk.jumlah_anggota ?? 0 }} Jiwa
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-5 py-3.5">
                                 <span :class="statusBadge(kk.verifikasi?.status_verifikasi ?? '')" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold capitalize">

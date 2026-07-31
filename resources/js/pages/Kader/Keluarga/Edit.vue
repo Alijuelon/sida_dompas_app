@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { ref, onMounted, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+
+const page = usePage();
+const isAdmin = computed(() => (page.props as any).auth?.user?.role === 'admin');
 
 const props = defineProps<{
     keluarga: any;
@@ -78,7 +81,7 @@ function toggleSumberAir(option: string) {
 // Regex validasi NIK/KK
 function isValidKK(kk: string): boolean {
     if (!kk || kk.length !== 16) return false;
-    return /^[0-9]{6}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{6}$/.test(kk);
+    return /^(1[1-9]|[2-9]\d)\d{4}(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{6}$/.test(kk);
 }
 
 function nextStep() {
@@ -114,18 +117,26 @@ function prevStep() {
 function submit() {
     form.clearErrors();
     let hasError = false;
-    if (form.sumber_air.length === 0) { form.setError('sumber_air' as any, 'Sumber air wajib dipilih minimal satu.'); hasError = true; }
-    if (form.sumber_air.includes('Lainnya') && !form.sumber_air_lainnya) { form.setError('sumber_air_lainnya' as any, 'Keterangan sumber air lainnya wajib diisi.'); hasError = true; }
-    if (!form.makanan_pokok) { form.setError('makanan_pokok' as any, 'Makanan pokok wajib dipilih.'); hasError = true; }
-    if (form.menempel_stiker_p4k && !form.jenis_stiker) { form.setError('jenis_stiker' as any, 'Jenis stiker wajib diisi jika menempel stiker.'); hasError = true; }
+    if (!isAdmin.value) {
+        if (form.sumber_air.length === 0) { form.setError('sumber_air' as any, 'Sumber air wajib dipilih minimal satu.'); hasError = true; }
+        if (form.sumber_air.includes('Lainnya') && !form.sumber_air_lainnya) { form.setError('sumber_air_lainnya' as any, 'Keterangan sumber air lainnya wajib diisi.'); hasError = true; }
+        if (!form.makanan_pokok) { form.setError('makanan_pokok' as any, 'Makanan pokok wajib dipilih.'); hasError = true; }
+        if (form.menempel_stiker_p4k && !form.jenis_stiker) { form.setError('jenis_stiker' as any, 'Jenis stiker wajib diisi jika menempel stiker.'); hasError = true; }
+    }
     
     if (hasError) {
         showErrorToast('Mohon lengkapi field yang ditandai bintang (*) sebelum menyimpan.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
-
-    form.put(`/kader/keluarga/${props.keluarga.id}`);
+    
+    form.put(`/kader/keluarga/${props.keluarga.id}`, {
+        preserveScroll: true,
+        onError: () => {
+            showErrorToast('Terdapat data yang belum lengkap atau tidak valid. Silakan periksa form Anda.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
 }
 
 const progressWidth = () => {
@@ -266,13 +277,19 @@ const progressWidth = () => {
 
                 <!-- ================= STEP 2 ================= -->
                 <div v-show="step === 2" class="p-6 md:p-8 transition-all duration-300">
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="bg-teal-50 text-teal-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
-                            <i class="fa-solid fa-chart-pie text-lg"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">Rekapitulasi Keluarga</h3>
-                            <p class="text-sm text-gray-500">Perbarui jumlah status dan kategori dalam keluarga.</p>
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-indigo-50 text-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm">
+                                <i class="fa-solid fa-list-check text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Rekapitulasi Keluarga</h3>
+                                <p class="text-sm text-gray-500">Perbarui jumlah status dan kategori dalam keluarga.</p>
+                                <p class="text-xs text-blue-600 mt-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <i class="fa-solid fa-circle-info mr-1"></i>
+                                    <strong>Keterangan Usia:</strong> Balita (0-5 tahun), Wanita Usia Subur / WUS (15-49 tahun), Pasangan Usia Subur / PUS (17-45 tahun), Lansia (≥ 60 tahun).
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
@@ -344,8 +361,17 @@ const progressWidth = () => {
                         </div>
                     </div>
 
+                    <!-- Bagian Survei (Hanya Kader) -->
+                    <div v-if="isAdmin" class="bg-amber-50 text-amber-700 px-4 py-3 rounded-xl text-sm font-semibold flex items-start gap-3 border border-amber-200 shadow-sm mt-8 mb-2">
+                        <i class="fa-solid fa-lock mt-0.5"></i>
+                        <div>
+                            Data Kriteria Rumah, Sumber Air, dan Kegiatan Warga di bawah ini hanya dapat diisi dan diubah oleh Kader yang turun langsung ke lapangan.
+                        </div>
+                    </div>
+                    
+                    <fieldset :disabled="isAdmin" class="border-0 p-0 m-0 w-full min-w-0" :class="{'opacity-70': isAdmin}">
                     <!-- Kriteria Rumah -->
-                    <div class="mt-8">
+                    <div class="mt-4">
                         <h4 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Kriteria Rumah <span class="text-red-500">*</span></h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200">
@@ -444,6 +470,7 @@ const progressWidth = () => {
                             </div>
                         </div>
                     </div>
+                    </fieldset>
                 </div>
 
                 <!-- FORM FOOTER (Navigation Buttons) -->

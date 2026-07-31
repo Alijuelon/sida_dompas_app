@@ -7,6 +7,7 @@ use App\Http\Requests\AnggotaKeluargaRequest;
 use App\Models\AnggotaKeluarga;
 use App\Models\Keluarga;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 
 class AnggotaKeluargaController extends Controller
 {
@@ -40,6 +41,11 @@ class AnggotaKeluargaController extends Controller
             $data['pendidikan'] = $data['pendidikan_terakhir'];
         }
 
+        // Logika Jabatan PKK: Hanya Perempuan yang bisa memiliki jabatan PKK
+        if (isset($data['jenis_kelamin']) && $data['jenis_kelamin'] === 'L') {
+            $data['jabatan'] = null;
+        }
+
         $keluarga->anggotaKeluargas()->create($data);
 
         // Sinkronisasi jumlah_anggota dari count aktual
@@ -55,7 +61,18 @@ class AnggotaKeluargaController extends Controller
     {
         $this->authorizeKader($anggotaKeluarga->keluarga);
         
-        return view('kader.anggota.edit', compact('anggotaKeluarga'));
+        
+        $keluarga = $anggotaKeluarga->keluarga;
+        $keluargaAktifCount = $keluarga->anggotaKeluargas()
+            ->whereNotNull('jabatan')
+            ->where('jabatan', '!=', '')
+            ->count();
+
+        return Inertia::render('Kader/Anggota/Edit', [
+            'anggotaKeluarga' => $anggotaKeluarga,
+            'keluargaAktifCount' => $keluargaAktifCount
+        ]);
+
     }
 
     public function update(AnggotaKeluargaRequest $request, AnggotaKeluarga $anggotaKeluarga): RedirectResponse
@@ -86,6 +103,11 @@ class AnggotaKeluargaController extends Controller
             $data['pendidikan_terakhir'] = $data['pendidikan'];
         } elseif (isset($data['pendidikan_terakhir'])) {
             $data['pendidikan'] = $data['pendidikan_terakhir'];
+        }
+
+        // Logika Jabatan PKK: Hanya Perempuan yang bisa memiliki jabatan PKK
+        if (isset($data['jenis_kelamin']) && $data['jenis_kelamin'] === 'L') {
+            $data['jabatan'] = null;
         }
 
         $anggotaKeluarga->update($data);

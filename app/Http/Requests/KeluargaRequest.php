@@ -20,7 +20,7 @@ class KeluargaRequest extends FormRequest
             'dasawisma_id'          => ['required', 'exists:dasawismas,id'],
             'no_kk'                 => [
                 'required', 'string', 'size:16',
-                'regex:/^[0-9]{6}(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{6}$/',
+                'regex:/^(1[1-9]|[2-9]\d)\d{4}(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{6}$/',
                 $keluargaId
                     ? Rule::unique('keluargas')->ignore($keluargaId)
                     : 'unique:keluargas,no_kk',
@@ -51,10 +51,10 @@ class KeluargaRequest extends FormRequest
             'memiliki_jamban'       => ['required', 'boolean'],
             'menempel_stiker_p4k'   => ['required', 'boolean'],
             'jenis_stiker'          => ['nullable', 'required_if:menempel_stiker_p4k,true,1', 'string', 'max:255'],
-            'sumber_air'            => ['required', 'array', 'min:1'],
-            'sumber_air.*'          => ['required', 'string', Rule::in(['PDAM', 'Sumur', 'Sungai', 'Mata Air', 'Air Hujan', 'Lainnya'])],
+            'sumber_air'            => [auth()->user()->isKader() ? 'required' : 'nullable', 'array', auth()->user()->isKader() ? 'min:1' : 'min:0'],
+            'sumber_air.*'          => [auth()->user()->isKader() ? 'required' : 'nullable', 'string', Rule::in(['PDAM', 'Sumur', 'Sungai', 'Mata Air', 'Air Hujan', 'Lainnya'])],
             'sumber_air_lainnya'    => ['nullable', 'string', 'max:255'],
-            'makanan_pokok'         => ['required', 'string', 'max:255'],
+            'makanan_pokok'         => [auth()->user()->isKader() ? 'required' : 'nullable', 'string', 'max:255'],
             'ikut_up2k'             => ['required', 'boolean'],
             'ikut_pekarangan'       => ['required', 'boolean'],
             'ikut_industri'         => ['required', 'boolean'],

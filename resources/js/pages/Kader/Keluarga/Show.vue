@@ -108,7 +108,18 @@ function openEditAnggota(ak: any) {
     showEditAnggota.value = true;
 }
 function submitEditAnggota() {
-    editAnggotaForm.put(`/kader/anggota/${editAnggotaId.value}`, {
+    editAnggotaForm.transform((data) => ({
+        ...data,
+        pendidikan_terakhir: data.pendidikan,
+        pekerjaan_utama: data.pekerjaan,
+        akseptor_kb: data.akseptor_kb === '1',
+        aktif_posyandu: data.aktif_posyandu === '1',
+        ikut_kelompok_belajar: data.ikut_kelompok_belajar === '1',
+        ikut_koperasi: data.ikut_koperasi === '1',
+        ikut_bina_keluarga_balita: data.ikut_bina_keluarga_balita === '1',
+        memiliki_tabungan: data.memiliki_tabungan === '1',
+        ikut_paud_sejenis: data.ikut_paud_sejenis === '1',
+    })).put(`/kader/anggota/${editAnggotaId.value}`, {
         onSuccess: () => { showEditAnggota.value = false; },
         preserveScroll: true,
     });
@@ -116,6 +127,19 @@ function submitEditAnggota() {
 
 // ===================== TAMBAH ANGGOTA =====================
 const showTambahAnggota = ref(false);
+
+watch(() => editAnggotaForm.jenis_kelamin, (newVal) => {
+    if (newVal === 'L') {
+        editAnggotaForm.jabatan = '';
+    }
+});
+
+watch(() => tambahForm.jenis_kelamin, (newVal) => {
+    if (newVal === 'L') {
+        tambahForm.jabatan = '';
+    }
+});
+
 const tambahForm = useForm({
     nik: '',
     nama_anggota: '',
@@ -154,7 +178,18 @@ const tambahForm = useForm({
     jenis_koperasi: '',
 });
 function submitTambahAnggota() {
-    tambahForm.post(`/kader/keluarga/${props.keluarga.id}/anggota`, {
+    tambahForm.transform((data) => ({
+        ...data,
+        pendidikan_terakhir: data.pendidikan,
+        pekerjaan_utama: data.pekerjaan,
+        akseptor_kb: data.akseptor_kb === '1',
+        aktif_posyandu: data.aktif_posyandu === '1',
+        ikut_kelompok_belajar: data.ikut_kelompok_belajar === '1',
+        ikut_koperasi: data.ikut_koperasi === '1',
+        ikut_bina_keluarga_balita: data.ikut_bina_keluarga_balita === '1',
+        memiliki_tabungan: data.memiliki_tabungan === '1',
+        ikut_paud_sejenis: data.ikut_paud_sejenis === '1',
+    })).post(`/kader/keluarga/${props.keluarga.id}/anggota`, {
         onSuccess: () => {
             showTambahAnggota.value = false;
             tambahForm.reset();
@@ -278,14 +313,18 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
             <!-- ====== REKAPITULASI ====== -->
             <div class="rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 p-6">
                 <h2 class="mb-4 text-base font-semibold text-gray-800">Rekapitulasi Kependudukan</h2>
-                <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
                     <div class="rounded-xl bg-blue-50 p-3 text-center">
                         <p class="text-[10px] text-blue-500 uppercase font-bold">Jml KK</p>
                         <p class="text-lg font-black text-blue-700">{{ keluarga.jumlah_kk ?? 0 }}</p>
                     </div>
                     <div class="rounded-xl bg-gray-50 p-3 text-center">
-                        <p class="text-[10px] text-gray-500 uppercase font-bold">Anggota</p>
-                        <p class="text-lg font-black text-gray-700">{{ keluarga.jumlah_anggota ?? 0 }}</p>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold">Total Jiwa</p>
+                        <p class="text-lg font-black text-gray-700">{{ keluarga.anggota_keluargas?.length ?? keluarga.jumlah_anggota ?? 0 }}</p>
+                    </div>
+                    <div class="rounded-xl bg-emerald-50 p-3 text-center border border-emerald-100">
+                        <p class="text-[10px] text-emerald-600 uppercase font-bold">Aktif PKK</p>
+                        <p class="text-lg font-black text-emerald-700">{{ keluarga.anggota_keluargas?.filter(a => a.jabatan && a.jabatan.trim() !== '').length ?? 0 }}</p>
                     </div>
                     <div class="rounded-xl bg-sky-50 p-3 text-center">
                         <p class="text-[10px] text-sky-500 uppercase font-bold">Laki-laki</p>
@@ -401,12 +440,18 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
             <!-- ====== DAFTAR ANGGOTA ====== -->
             <div class="rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
                 <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-gray-800 flex items-center gap-2">
-                        Daftar Anggota Warga PKK
-                        <span class="rounded-full bg-emerald-100 ring-1 ring-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5">
-                            <i class="fa-solid fa-users"></i> Total Aktif: {{ keluarga.anggota_keluargas?.length ?? 0 }}
-                        </span>
-                    </h2>
+                    <div class="flex-1">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            Daftar Anggota Warga PKK
+                            <span class="rounded-full bg-emerald-100 ring-1 ring-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700 flex items-center gap-1.5 ml-2">
+                                <i class="fa-solid fa-users"></i> Total Aktif: {{ keluarga.anggota_keluargas?.filter(a => a.jabatan && a.jabatan.trim() !== '').length ?? 0 }} Orang
+                            </span>
+                        </h2>
+                        <p class="text-xs text-emerald-600 mt-1.5 italic">
+                            <i class="fa-solid fa-circle-info mr-1"></i>
+                            *Penjelasan: Jumlah di atas merupakan total anggota keluarga yang masih aktif dan didata dalam kegiatan PKK di Kartu Keluarga (KK) ini.
+                        </p>
+                    </div>
                     <button @click="showTambahAnggota = true"
                         class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95">
                         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -455,7 +500,14 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                                 class="group transition hover:bg-gray-50/60">
                                 <td class="px-5 py-3.5 text-xs text-gray-400">{{ idx + 1 }}</td>
                                 <td class="px-5 py-3.5 font-mono text-xs text-gray-500">{{ ak.nik }}</td>
-                                <td class="px-5 py-3.5 font-semibold text-gray-800">{{ ak.nama_anggota }}</td>
+                                <td class="px-5 py-3.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-800">{{ ak.nama_anggota }}</span>
+                                        <span v-if="ak.jabatan && ak.jabatan.trim() !== ''" title="Anggota ini aktif dan memiliki Jabatan PKK" class="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+                                            <i class="fa-solid fa-leaf"></i> Aktif PKK
+                                        </span>
+                                    </div>
+                                </td>
                                 <td class="px-5 py-3.5">
                                     <span
                                         :class="ak.jenis_kelamin === 'L' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'"
@@ -492,71 +544,76 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
             <form @submit.prevent="submitEditAnggota" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">NIK (16 digit) *</label>
-                        <input v-model="editAnggotaForm.nik" type="text" maxlength="16"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">NIK (16 digit) <span class="text-red-500">*</span></label>
+                        <input v-model="editAnggotaForm.nik" type="text" maxlength="16" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 font-mono text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
-                        <p v-if="editAnggotaForm.errors.nik" class="mt-1 text-xs text-red-500">{{
-                            editAnggotaForm.errors.nik }}</p>
+                        <p v-if="editAnggotaForm.errors.nik" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.nik }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Nama Lengkap *</label>
-                        <input v-model="editAnggotaForm.nama_anggota" type="text"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input v-model="editAnggotaForm.nama_anggota" type="text" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
-                        <p v-if="editAnggotaForm.errors.nama_anggota" class="mt-1 text-xs text-red-500">{{
-                            editAnggotaForm.errors.nama_anggota }}</p>
+                        <p v-if="editAnggotaForm.errors.nama_anggota" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.nama_anggota }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Jenis Kelamin *</label>
-                        <select v-model="editAnggotaForm.jenis_kelamin"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Jenis Kelamin <span class="text-red-500">*</span></label>
+                        <select v-model="editAnggotaForm.jenis_kelamin" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="L">Laki-laki</option>
                             <option value="P">Perempuan</option>
                         </select>
+                        <p v-if="editAnggotaForm.errors.jenis_kelamin" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.jenis_kelamin }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Tanggal Lahir *</label>
-                        <input v-model="editAnggotaForm.tanggal_lahir" type="date"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Tanggal Lahir <span class="text-red-500">*</span></label>
+                        <input v-model="editAnggotaForm.tanggal_lahir" type="date" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                        <p v-if="editAnggotaForm.errors.tanggal_lahir" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.tanggal_lahir }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Agama</label>
-                        <select v-model="editAnggotaForm.agama"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Agama <span class="text-red-500">*</span></label>
+                        <select v-model="editAnggotaForm.agama" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="a in agamaOptions" :key="a" :value="a">{{ a }}</option>
                         </select>
+                        <p v-if="editAnggotaForm.errors.agama" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.agama }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pendidikan</label>
-                        <select v-model="editAnggotaForm.pendidikan"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pendidikan <span class="text-red-500">*</span></label>
+                        <select v-model="editAnggotaForm.pendidikan" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="p in pendidikanOptions" :key="p" :value="p">{{ p }}</option>
                         </select>
+                        <p v-if="editAnggotaForm.errors.pendidikan" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.pendidikan }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pekerjaan</label>
-                        <select v-model="editAnggotaForm.pekerjaan"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pekerjaan <span class="text-red-500">*</span></label>
+                        <select v-model="editAnggotaForm.pekerjaan" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="pk in pekerjaanOptions" :key="pk" :value="pk">{{ pk }}</option>
                         </select>
+                        <p v-if="editAnggotaForm.errors.pekerjaan" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.pekerjaan }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status dalam Keluarga</label>
-                        <select v-model="editAnggotaForm.status_dalam_keluarga"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status dalam Keluarga <span class="text-red-500">*</span></label>
+                        <select v-model="editAnggotaForm.status_dalam_keluarga" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="s in statusKKOptions" :key="s" :value="s">{{ s }}</option>
                         </select>
+                        <p v-if="editAnggotaForm.errors.status_dalam_keluarga" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.status_dalam_keluarga }}</p>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status Perkawinan</label>
-                        <select v-model="editAnggotaForm.status_perkawinan"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status Perkawinan <span class="text-red-500">*</span></label>
+                        <select v-model="editAnggotaForm.status_perkawinan" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="sk in statusKawinOptions" :key="sk" :value="sk">{{ sk }}</option>
                         </select>
+                        <p v-if="editAnggotaForm.errors.status_perkawinan" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.status_perkawinan }}</p>
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-gray-600">Memiliki Tabungan?</label>
@@ -567,9 +624,10 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         </select>
                     </div>
                     <div v-if="editAnggotaForm.memiliki_tabungan === '1'">
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Keterangan Tabungan *</label>
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Keterangan Tabungan <span class="text-red-500">*</span></label>
                         <input v-model="editAnggotaForm.keterangan_tabungan" type="text" placeholder="Misal: Bank BRI..."
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                        <p v-if="editAnggotaForm.errors.keterangan_tabungan" class="mt-1 text-xs text-red-500">{{ editAnggotaForm.errors.keterangan_tabungan }}</p>
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
@@ -589,69 +647,76 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
             <form @submit.prevent="submitTambahAnggota" class="space-y-4">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">NIK (16 digit) *</label>
-                        <input v-model="tambahForm.nik" type="text" maxlength="16" placeholder="16 digit NIK"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">NIK (16 digit) <span class="text-red-500">*</span></label>
+                        <input v-model="tambahForm.nik" type="text" maxlength="16" placeholder="16 digit NIK" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 font-mono text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
-                        <p v-if="tambahForm.errors.nik" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.nik }}
-                        </p>
+                        <p v-if="tambahForm.errors.nik" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.nik }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Nama Lengkap *</label>
-                        <input v-model="tambahForm.nama_anggota" type="text"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input v-model="tambahForm.nama_anggota" type="text" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                        <p v-if="tambahForm.errors.nama_anggota" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.nama_anggota }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Jenis Kelamin *</label>
-                        <select v-model="tambahForm.jenis_kelamin"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Jenis Kelamin <span class="text-red-500">*</span></label>
+                        <select v-model="tambahForm.jenis_kelamin" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="L">Laki-laki</option>
                             <option value="P">Perempuan</option>
                         </select>
+                        <p v-if="tambahForm.errors.jenis_kelamin" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.jenis_kelamin }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Tanggal Lahir *</label>
-                        <input v-model="tambahForm.tanggal_lahir" type="date"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Tanggal Lahir <span class="text-red-500">*</span></label>
+                        <input v-model="tambahForm.tanggal_lahir" type="date" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                        <p v-if="tambahForm.errors.tanggal_lahir" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.tanggal_lahir }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Agama</label>
-                        <select v-model="tambahForm.agama"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Agama <span class="text-red-500">*</span></label>
+                        <select v-model="tambahForm.agama" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="a in agamaOptions" :key="a" :value="a">{{ a }}</option>
                         </select>
+                        <p v-if="tambahForm.errors.agama" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.agama }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pendidikan</label>
-                        <select v-model="tambahForm.pendidikan"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pendidikan <span class="text-red-500">*</span></label>
+                        <select v-model="tambahForm.pendidikan" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="p in pendidikanOptions" :key="p" :value="p">{{ p }}</option>
                         </select>
+                        <p v-if="tambahForm.errors.pendidikan" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.pendidikan }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pekerjaan</label>
-                        <select v-model="tambahForm.pekerjaan"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Pekerjaan <span class="text-red-500">*</span></label>
+                        <select v-model="tambahForm.pekerjaan" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="pk in pekerjaanOptions" :key="pk" :value="pk">{{ pk }}</option>
                         </select>
+                        <p v-if="tambahForm.errors.pekerjaan" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.pekerjaan }}</p>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status dalam Keluarga</label>
-                        <select v-model="tambahForm.status_dalam_keluarga"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status dalam Keluarga <span class="text-red-500">*</span></label>
+                        <select v-model="tambahForm.status_dalam_keluarga" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="s in statusKKOptions" :key="s" :value="s">{{ s }}</option>
                         </select>
+                        <p v-if="tambahForm.errors.status_dalam_keluarga" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.status_dalam_keluarga }}</p>
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status Perkawinan</label>
-                        <select v-model="tambahForm.status_perkawinan"
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Status Perkawinan <span class="text-red-500">*</span></label>
+                        <select v-model="tambahForm.status_perkawinan" required
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition">
                             <option value="">-- Pilih --</option>
                             <option v-for="sk in statusKawinOptions" :key="sk" :value="sk">{{ sk }}</option>
                         </select>
+                        <p v-if="tambahForm.errors.status_perkawinan" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.status_perkawinan }}</p>
                     </div>
                     <div>
                         <label class="mb-1 block text-xs font-semibold text-gray-600">Memiliki Tabungan?</label>
@@ -662,9 +727,10 @@ function yn(v: any) { return v ? 'Ya' : 'Tidak'; }
                         </select>
                     </div>
                     <div v-if="tambahForm.memiliki_tabungan === '1'">
-                        <label class="mb-1 block text-xs font-semibold text-gray-600">Keterangan Tabungan *</label>
+                        <label class="mb-1 block text-xs font-semibold text-gray-600">Keterangan Tabungan <span class="text-red-500">*</span></label>
                         <input v-model="tambahForm.keterangan_tabungan" type="text" placeholder="Misal: Bank BRI..."
                             class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                        <p v-if="tambahForm.errors.keterangan_tabungan" class="mt-1 text-xs text-red-500">{{ tambahForm.errors.keterangan_tabungan }}</p>
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
